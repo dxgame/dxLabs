@@ -3,8 +3,36 @@ Go Game on Block Chain
 
 ```
 Objects:
+
     Block
+        Hash
+        Content
+            Height:
+            Previous block hash:
+            Version:
+            Time:
+            Bits:
+            Nounce:
+            Miner Public Key:
+            Transactions:
+                Hash Merkle root
+
     Transaction
+        Hash
+        Content
+            Root Block Id:
+            Expire Blocks:
+                Inputs:
+                Outputs:
+            Data:
+
+    Outputs:
+        Hash
+        Content:
+            Receiver:
+            Ammount:
+
+https://en.bitcoin.it/wiki/Transaction
 
 Functions:
     Broadcast Block
