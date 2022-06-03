@@ -91,12 +91,12 @@ abstract contract GameToken {
     }
 
     // uint initialAward = 500,000,000,000,000,000,000,000;
-    // uint halvingPeriod = 2,100;
+    // uint halvingTourneys = 2,100;
 
     // block as timer & ticker
     // tick > beat > tourney
     // A tick ≡ a block
-    // A beat, made of ticks, the game player must show up in a beat
+    // A beat, made of ticks, the game player must show up in a beat or will be marked lose of a game
     // Tick Number ≡ Block Number Since first tourney started (from tick no 0)
     // 
 
@@ -106,26 +106,26 @@ abstract contract GameToken {
     uint beatsPerTourney = 144; // 
 
     uint initialAward = 500000000000000000000000;
-    uint halvingPeriod = 2100;
+    uint halvingTourneys = 2100;
 
     Tourney[] tourneys;
 
-    function getTickNumber() public view returns (uint tickNumber) {
-        tickNumber = block.number - genesisBlockNumber;
+    function getTickNumber() public view returns (uint) {
+        return block.number - genesisBlockNumber;
     }
-    function getCurrentTourneyId() public virtual returns (uint currentTourneyId) {
-        uint tickNumber = this.getTickNumber();
-        currentTourneyId = tickNumber / ticksPerTourney;
+    function getCurrentTourneyId() public virtual returns (uint) {
+        return this.getTickNumber() / ticksPerTourney;
     }
-    function getTourneyAward(uint tourneyId) public virtual returns (uint award) {
-        uint halvingCycle = tourneyId / halvingPeriod;
-        award = initialAward / (2 ^ halvingCycle);
+    function getCurrentTourney() internal virtual returns (Tourney storage) {
+        return tourneys[getCurrentTourneyId()];
     }
-    function getTourney(uint tourneyId) internal virtual returns (Tourney storage tourney) {
-        tourney = tourneys[tourneyId];
+
+    function getTourneyAward(uint tourneyId) public virtual returns (uint) {
+        uint halvingCycle = tourneyId / halvingTourneys;
+        return initialAward / (2 ^ halvingCycle);
     }
-    function getCurrentTourney() internal virtual returns (Tourney storage tourney) {
-        tourney = tourneys[getCurrentTourneyId()];
+    function getCurrentTourneyAward() public virtual returns (uint) {
+        return getTourneyAward(getCurrentTourneyId());
     }
 
     function updateGameState(uint tourneyId, uint gameId) public virtual returns (bool);
