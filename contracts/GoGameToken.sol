@@ -32,7 +32,7 @@ abstract contract Context {
     }
 }
 
-abstract contract GameToken {
+abstract contract GameToken is IERC20 {
     struct SeatNFT {
         address owner;
 
@@ -47,7 +47,8 @@ abstract contract GameToken {
 
     struct Tourney {
         uint id;
-        SeatNFT[] seatsById;
+        SeatNFT[] seats;
+        Game[] games;
 
         uint award;
         uint totalBets;
@@ -55,8 +56,6 @@ abstract contract GameToken {
         uint totalAward;
 
         uint startAt;
-
-        Game[] games;
         uint winnerSeatId;
     }
 
@@ -105,8 +104,16 @@ abstract contract GameToken {
     uint ticksPerBeat = 200; // About 10 mins on BSC
     uint beatsPerTourney = 144; // 
 
-    uint initialAward = 500000000000000000000000;
+    uint oneToken = 1_000_000_000_000_000_000;
+    uint enrollFee = 1_000_000_000_000_000_000;
+
+    uint initialAward = 500_000_000_000_000_000_000_000;
     uint halvingTourneys = 2100;
+
+    // fee dynamics
+    // 2^7 * 2^19; 144/6 -> 19;
+    uint beatsToDoubleInOneTourney = 6;
+    uint tourneysAdvanceToDouble = 7;
 
     Tourney[] tourneys;
 
@@ -126,6 +133,49 @@ abstract contract GameToken {
     }
     function getCurrentTourneyAward() public virtual returns (uint) {
         return getTourneyAward(getCurrentTourneyId());
+    }
+
+    function amIEnrolled(uint tourneyId) public view virtual returns (bool) {
+        return isEnrolled(msg.sender, tourneyId);
+    }
+
+    function getSeats(uint tourneyId) internal view virtual returns (SeatNFT[] storage) {
+        Tourney storage tourney = tourneys[tourneyId];
+        return tourney.seats;
+    }
+
+    function isEnrolled(address player, uint tourneyId) public view virtual returns (bool) {
+        SeatNFT[] storage seats = getSeats(tourneyId);
+        for(uint i; i < seats.length; i++) {
+            if (seats[i].owner == player) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function enroll(uint tourneyId, uint fee) public virtual returns (bool) {
+        Tourney storage tourney = tourneys[tourneyId];
+
+        // feeDynamics
+        // count dynamics per tourney, first 16, 1
+        // count dynamics per address, first 1, ... * 2^(n seats alread - 1)
+        // time dynamics per tourney, 7 tourneys advance, 1, ... * 2^(7-n days advance)
+        // time dynamics per beats, 
+
+        // uint feeDynamics // encourage people enroll in advance, freeze the tokens in seats
+
+        require(fee >= enrollFee, "Not Enough Fee");
+        require(amIEnrolled(tourneyId), "Already Enrolled");
+
+        // TODO: Apply dynamic enrollFee, 1 token for  advance,
+        this.transfer(address(this), enrollFee);
+
+        SeatNFT[] storage seats = tourney.seats;
+        SeatNFT storage newSeat = seats[seats.length];
+        newSeat.owner = msg.sender;
+
+        return true;
     }
 
     function updateGameState(uint tourneyId, uint gameId) public virtual returns (bool);
