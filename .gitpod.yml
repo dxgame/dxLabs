@@ -25,3 +25,4 @@ vscode:
   extensions:
     - dbaeumer.vscode-eslint
     - JuanBlanco.solidity
+    - mhutchie.git-graph
