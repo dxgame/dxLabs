@@ -1,5 +1,5 @@
 
-image: gitpod/workspace-node
+image: gitpod/workspace-full
 
 # List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
 ports:
@@ -8,13 +8,10 @@ ports:
 
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
-  - command: |
-      # mongod
-  - init: |
-      # npm install
-      # npm run build
-    command: |
-      # npm run start
+  - before: |
+      sh ./scripts/setup.sh
+    init: npm install
+    # command: npm run dev
 
 vscode:
   extensions:
