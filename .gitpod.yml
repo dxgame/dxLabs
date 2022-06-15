@@ -2,8 +2,8 @@ image: gitpod/workspace-full
 
 # https://www.gitpod.io/docs/config-ports/
 # ports:
-  # - port: 3000
-    # onOpen: open-preview
+# - port: 3000
+# onOpen: open-preview
 
 # https://www.gitpod.io/docs/config-start-tasks/
 tasks:
@@ -24,3 +24,4 @@ tasks:
 vscode:
   extensions:
     - dbaeumer.vscode-eslint
+    - JuanBlanco.solidity
