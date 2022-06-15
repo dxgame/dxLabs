@@ -18,7 +18,7 @@ tasks:
       npm install
       gp sync-done npm
     command: |
-      gp await-port 3000
+      gp await-port 9545
       npm run test
 
 vscode:
