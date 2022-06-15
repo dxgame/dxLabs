@@ -1,17 +1,24 @@
-
 image: gitpod/workspace-full
 
-# List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
-ports:
-  - port: 3000
+# https://www.gitpod.io/docs/config-ports/
+# ports:
+  # - port: 3000
     # onOpen: open-preview
 
-# List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
+# https://www.gitpod.io/docs/config-start-tasks/
 tasks:
-  - before: |
-      sh ./scripts/setup.sh
-    init: npm install
-    # command: npm run dev
+  - name: NPM
+    before: >
+      npm install -g truffle
+    init: >
+      npm install
+      gp sync-done npm
+    command: >
+      npm run dev
+
+  - name: Truffle
+    init: gp sync-await npm
+    command: truffle develop
 
 vscode:
   extensions:
