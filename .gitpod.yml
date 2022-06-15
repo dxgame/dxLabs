@@ -8,13 +8,13 @@ image: gitpod/workspace-full
 # https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   - name: NPM
-    before: >
+    before: |
       npm install -g truffle
-    init: >
-      npm install
       gp sync-done npm
-    command: >
-      npm run dev
+    init: |
+      npm install
+    command: |
+      npm run test
 
   - name: Truffle
     init: gp sync-await npm
