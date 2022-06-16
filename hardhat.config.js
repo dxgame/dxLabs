@@ -5,7 +5,13 @@ require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 
-// hardhat log removing
+/*
+  hardhat log removing by
+    npm run xlog
+    or
+    hardhat preprocess [--dest <destination folder>]
+*/
+
 require("hardhat-log-remover");
 const { removeConsoleLog } = require("hardhat-preprocessor");
 
