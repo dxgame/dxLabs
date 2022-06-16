@@ -7,18 +7,12 @@ image: gitpod/workspace-full
 
 # https://www.gitpod.io/docs/config-start-tasks/
 tasks:
-  - name: Truffle
-    init: gp sync-await npm
-    command: truffle develop
-
   - name: NPM
     before: |
-      npm install -g truffle
+
     init: |
       npm install
-      gp sync-done npm
     command: |
-      gp await-port 9545
       npm run test
 
 vscode:

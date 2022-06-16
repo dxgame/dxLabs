@@ -1,71 +1,42 @@
-# gogamechain
-Go Game on Block Chain
+# Advanced Sample Hardhat Project
 
-```
-Objects:
+This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
 
-    Block
-        Hash
-        Content
-            Height:
-            Previous block hash:
-            Version:
-            Time:
-            Bits:
-            Nounce:
-            Miner Public Key:
-            Transactions:
-                Hash Merkle root
+The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
 
-    Transaction
-        Hash
-        Content
-            Root Block Id:
-            Expire Blocks:
-                Inputs:
-                Outputs:
-            Data:
+Try running some of the following tasks:
 
-    Outputs:
-        Hash
-        Content:
-            Receiver:
-            Ammount:
-
-https://en.bitcoin.it/wiki/Transaction
-
-Functions:
-    Broadcast Block
-    Broadcast Transaction
-    Verify Block
-    Verify Transaction
+```shell
+npx hardhat accounts
+npx hardhat compile
+npx hardhat clean
+npx hardhat test
+npx hardhat node
+npx hardhat help
+REPORT_GAS=true npx hardhat test
+npx hardhat coverage
+npx hardhat run scripts/deploy.js
+node scripts/deploy.js
+npx eslint '**/*.js'
+npx eslint '**/*.js' --fix
+npx prettier '**/*.{json,sol,md}' --check
+npx prettier '**/*.{json,sol,md}' --write
+npx solhint 'contracts/**/*.sol'
+npx solhint 'contracts/**/*.sol' --fix
 ```
 
-Sketch
+# Etherscan verification
 
+To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
+
+In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
+
+```shell
+hardhat run --network ropsten scripts/deploy.js
 ```
-    Transaction
 
-    Inputs
-    Outputs
+Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
 
-    Root Block ID
-    Expire Blocks
-
-    Heaviest Chain:
-    Max Entropy, Max Frozen (Min Liquidity)
-    Max Frozen * Max Entropy
-
-    Double Spending Burn
-
-    Proof of Work
-    Proof of Appreciation
-    Proof of Bury
-    Proof of Flowing
-    Proof of Winning a contest
-    Block Height Only Offer Once PoB
-    PoB of Old Coin
-    Paper Scissor Stone
-    Anti Monopoly Algorithm
-    VDF Proof of Time
+```shell
+npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
 ```

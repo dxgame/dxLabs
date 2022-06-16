@@ -105,3 +105,8 @@ dist
 
 github
 artifacts
+
+coverage.json
+typechain
+
+cache
