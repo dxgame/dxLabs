@@ -11,7 +11,6 @@ require("solidity-coverage");
     or
     hardhat preprocess [--dest <destination folder>]
 */
-
 require("hardhat-log-remover");
 const { removeConsoleLog } = require("hardhat-preprocessor");
 
