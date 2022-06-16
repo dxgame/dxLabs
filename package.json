@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/dxgame/GoGameToken/issues"
   },
-  "homepage": "https://github.com/dxgame/GoGameToken#readme"
+  "homepage": "https://github.com/dxgame/GoGameToken#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.6.0"
+  }
 }
