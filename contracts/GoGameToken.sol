@@ -77,23 +77,23 @@ abstract contract GameToken is IERC20 {
     // Tick Number ≡ Block Number Since first tourney started (from tick no 0)
     // 
 
-    uint genesisBlockNumber = block.number;
-    uint ticksPerTourney = 28800; // About one day on BSC
-    uint ticksPerBeat = 200; // About 10 mins on BSC
-    uint beatsPerTourney = 144; // 
+    uint public genesisBlockNumber = block.number;
+    uint public ticksPerTourney = 28800; // About one day on BSC
+    uint public ticksPerBeat = 200; // About 10 mins on BSC
+    uint public beatsPerTourney = 144; // 
 
-    uint oneToken = 1_000_000_000_000_000_000;
-    uint enrollFee = 1_000_000_000_000_000_000;
+    uint public oneToken = 1_000_000_000_000_000_000;
+    uint public enrollFee = 1_000_000_000_000_000_000;
 
-    uint initialAward = 500_000_000_000_000_000_000_000;
-    uint halvingTourneys = 2100;
+    uint public initialAward = 500_000_000_000_000_000_000_000;
+    uint public halvingTourneys = 2100;
 
     // fee dynamics
     // 2^7 * 2^19; 144/6 -> 19;
-    uint beatsToDoubleInOneTourney = 6;
-    uint tourneysAdvanceToDouble = 7;
+    uint public beatsToDoubleInOneTourney = 6;
+    uint public tourneysAdvanceToDouble = 7;
 
-    Tourney[] tourneys;
+    Tourney[] public tourneys;
 
     function getTickNumber() public view returns (uint) {
         return block.number - genesisBlockNumber;
