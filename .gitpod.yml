@@ -12,6 +12,8 @@ tasks:
 
     init: |
       npm install
+      npm i -g hardhat-shorthand
+      hardhat-completion install
     command: |
       npm run test
 
