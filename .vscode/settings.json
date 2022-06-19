@@ -1,4 +1,13 @@
 {
   "solidity.defaultCompiler": "remote",
-  "solidity.compileUsingRemoteVersion": "v0.8.14+commit.80d49f37"
+  "solidity.compileUsingRemoteVersion": "v0.8.14+commit.80d49f37",
+  "editor.formatOnSave": false,
+  // Runs Prettier, then ESLint
+  "editor.codeActionsOnSave": [
+    "source.formatDocument",
+    "source.fixAll.eslint"
+  ],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false
 }
