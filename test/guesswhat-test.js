@@ -56,7 +56,17 @@ describe("GuessWhat", function () {
     expect(await contract.defender()).to.equal(addr1.address);
     expect(await contract.challenger()).to.equal(addr2.address);
 
-    await expect(contract.connect(addr1).defend(HashZero)).not.to.be.reverted;
+    const preBlock = await ethers.provider.getBlock("latest");
+
+    await expect(contract.connect(addr1).defend(HashZero))
+      .to.emit(contract, "UpdateNextMoveEvent")
+      .withArgs(
+        2,
+        addr1.address,
+        addr2.address,
+        preBlock.number + 1 + 200,
+        preBlock.number + 1 + 400
+      );
   });
 
   it("Should not be able to defend without a challenge in effect", async function () {
