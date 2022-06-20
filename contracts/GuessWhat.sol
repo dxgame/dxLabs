@@ -124,9 +124,9 @@ contract GuessWhat is Ownable, ERC20 {
         _;
     }
 
-    function _announceWinning() private {
-        defender = _msgSender();
-        emit WinningEvent(defender);
+    function _noResponse() private view returns (bool) {
+        return (block.number > nextMoveDeadline)
+            && (block.number <= noResponseSoClaimWinningDeadline);
     }
 
     function _noDefender() private view returns (bool) {
@@ -134,7 +134,13 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     function _lastGameAbandoned() private view returns (bool) {
-        return noResponseSoClaimWinningDeadline != 0 && block.number > noResponseSoClaimWinningDeadline;
+        return (noResponseSoClaimWinningDeadline != 0)
+            && (block.number > noResponseSoClaimWinningDeadline);
+    }
+
+    function _announceWinning() private {
+        defender = _msgSender();
+        emit WinningEvent(defender);
     }
 
     function challenge(bytes32 _encryptedRequest) external {
@@ -175,18 +181,24 @@ contract GuessWhat is Ownable, ERC20 {
         _updateNextMove();
 
         if (nextMover == _msgSender()) {
-            claimWinning();
+            _claimWinning();
         }
     }
 
-    function claimWinning() public nextMoveIs(Step.FIVE_WinnerClaimed) {
+    function _claimWinning() private nextMoveIs(Step.FIVE_WinnerClaimed) {
         _announceWinning();
         _resetNextMove();
     }
 
-    function claimWinningBczNoResponse() external noResponse {
+    function _claimWinningBczNoResponse() private noResponse {
         _announceWinning();
         _resetNextMove();
+    }
+
+    function claimWinning() external {
+        return _noResponse()
+            ? _claimWinningBczNoResponse()
+            : _claimWinning();
     }
 }
 
