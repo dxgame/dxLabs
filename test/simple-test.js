@@ -1,17 +1,11 @@
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
-
-const N = (n) => ethers.utils.parseEther(n.toString());
-console.log("fdsafdsafda");
+const { N, prepare } = require("./utils");
 
 describe("SimpleToken", function () {
   let contract, addr1;
 
   beforeEach(async function () {
-    [, addr1] = await ethers.getSigners();
-    const Contract = await ethers.getContractFactory("SimpleToken");
-    contract = await Contract.deploy(N`10`);
-    await contract.deployed();
+    [contract, , addr1] = await prepare("SimpleToken", N`10`);
   });
 
   it("Should return the new totalSupply once it's changed", async function () {
