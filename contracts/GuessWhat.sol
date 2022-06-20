@@ -18,6 +18,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
     if (the next mover did not move before nextMoveDeadline) {
         the current mover can claim winning in noResponseSoClaimWinningDeadline
     }
+
+    if (no body do any shit before noResponseSoClaimWinningDeadline) {
+        anyone can start a new challenge
+    }
 */
 contract GuessWhat is Ownable, ERC20 {
     enum Step {
