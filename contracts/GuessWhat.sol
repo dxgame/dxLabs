@@ -4,16 +4,40 @@ pragma solidity ^0.8.14;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-// The Owner of the contract
+/*
+    step 0: ready for challenge
 
+    step 1: challenger starts new challenge
+    step 2: defender defends
+
+    step 3: challenger reveals
+    step 4: defender reveals
+
+    step 5: winner claims winning
+
+    if (the next mover did not move before nextMoveDeadline) {
+        the current mover can claim winning in noResponseSoClaimWinningDeadline
+    }
+*/
 contract GuessWhat is Ownable, ERC20 {
-    address private _winner;
+    enum Step {
+        ONE_ChallengeStarted,
+        TWO_DefenderDefended,
+        THREE_ChallengerRevealed,
+        FOUR_DefenderRevealed,
+        FIVE_WinnerClaimed
+    }
+
+    address public defender;
     address public challenger;
 
-    uint constant public replyOrLoseBlocks = 200;
-    uint public defendDue;
-    uint public challengerRevealDue;
-    uint public defenderRevealDue;
+    Step public nextMove = Step.ONE_ChallengeStarted;
+    address public lastMover;
+    address public nextMover;
+
+    uint constant public MAX_BLOCKS_PER_MOVE = 200;
+    uint public nextMoveDeadline;
+    uint public noResponseSoClaimWinningDeadline;
 
     bytes32 private encryptedRequest;
     bytes32 private encryptedResponse;
@@ -21,99 +45,145 @@ contract GuessWhat is Ownable, ERC20 {
     string public revealedRequest;
     string public revealedResponse;
 
+    event WinningEvent(address winner);
+    event UpdateNextMoveEvent(
+        Step nextMove,
+        address lastMover,
+        address nextMover,
+        uint nextMoveDeadline,
+        uint noResponseSoClaimWinningDeadline
+    );
+    event ResetNextMoveEvent(address lastMover);
+
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
     }
 
-    function mint(uint256 amount) external onlyOwner {
-        _mint(owner(), amount);
+    function _whoWins() private view returns (address) {
+        return isOne(revealedResponse) == isOne(revealedRequest) ? defender : challenger;
     }
 
-    function winner() public view virtual returns (address) {
-        return _winner;
+    function _updateNextMove() private {
+        lastMover = _msgSender();
+        Step currentMove = nextMove;
+        nextMove = Step((uint(currentMove) + 1) % 5);
+
+        nextMoveDeadline = block.number + MAX_BLOCKS_PER_MOVE;
+        noResponseSoClaimWinningDeadline = nextMoveDeadline + MAX_BLOCKS_PER_MOVE;
+
+        address winner = nextMove == Step.FIVE_WinnerClaimed ? _whoWins() : address(0);
+
+        nextMover = [
+            address(0),
+            defender,
+            challenger,
+            defender,
+            winner
+        ][uint(nextMove)];
+
+        emit UpdateNextMoveEvent(
+            nextMove,
+            lastMover,
+            nextMover,
+            nextMoveDeadline,
+            noResponseSoClaimWinningDeadline
+        );
     }
 
-    function _win(address _luckyGuy) private {
-        _winner = _luckyGuy;
-        _setChallenge(0, address(0), 0);
+    function _resetNextMove() private {
+        lastMover = _msgSender();
+
+        nextMove = Step.ONE_ChallengeStarted;
+        nextMover = address(0);
+        nextMoveDeadline = 0;
+        noResponseSoClaimWinningDeadline = 0;
+
+        encryptedRequest = 0;
+        encryptedResponse = 0;
+        revealedRequest = "";
+        revealedResponse = "";
+    
+        emit ResetNextMoveEvent(lastMover);
     }
 
-    function _claimTheWinner() private {
-        address luckyGuy = isOne(revealedResponse) == isOne(revealedRequest) ? _winner : challenger;
-        _win(luckyGuy);
-    }
-
-    modifier onlyDefender {
-        require(winner() == _msgSender(), "GuessWhat: caller is not the winner");
+    modifier nextMoveIs(Step move) {
+        require(nextMove == move, "GuessWhat: move not allowed");
+        require(nextMover == _msgSender(), "GuessWhat: not the account");
+        require(block.number <= nextMoveDeadline, "GuessWhat: you are too late");
         _;
     }
 
-    modifier onlyChallenger {
-        require(challenger == _msgSender(), "GuessWhat: caller is not the challenger");
+    modifier noResponse() {
+        require(lastMover == _msgSender(), "GuessWhat: not the account");
+        require(block.number > nextMoveDeadline, "GuessWhat: you are too early");
+        require(block.number <= noResponseSoClaimWinningDeadline, "GuessWhat: you are too late");
         _;
     }
 
-    modifier underChallenge() {
-        require(challenger != address(0), "GuessWhat: not under challenge");
-        _;
+    function _announceWinning() private {
+        defender = _msgSender();
+        emit WinningEvent(defender);
     }
 
-    modifier challengeable() {
-        require(challenger == address(0), "GuessWhat: under challenge");
-        _;
+    function _noDefender() private view returns (bool) {
+        return defender == address(0);
     }
 
-    modifier defendable() {
-        require(block.number <= defendDue, "GuessWhat: overdue");
-        _;
+    function _lastGameAbandoned() private view returns (bool) {
+        return noResponseSoClaimWinningDeadline != 0 && block.number > noResponseSoClaimWinningDeadline;
     }
 
-    modifier challengerRevealable() {
-        require(block.number <= challengerRevealDue, "GuessWhat: overdue");
-        _;
-    }
-
-    modifier defenderRevealable() {
-        require(block.number <= defenderRevealDue, "GuessWhat: overdue");
-        _;
-    }
-
-    function _setChallenge(uint _defendDue, address _challenger, bytes32 _encryptedRequest) private {
-        defendDue = _defendDue;
-        challenger = _challenger;
-        encryptedRequest = _encryptedRequest;
-    }
-
-    function challenge(bytes32 _encryptedRequest) external challengeable {
-        if (winner() == address(0)) {
-            _win(_msgSender());
+    function challenge(bytes32 _encryptedRequest) external {
+        if (_noDefender()) {
+            _announceWinning();
             return;
         }
-        _setChallenge(block.number + replyOrLoseBlocks, _msgSender(), _encryptedRequest);
+
+        if (_lastGameAbandoned()) {
+            _resetNextMove();
+        }
+    
+        _challenge(_encryptedRequest);
     }
 
-    function defend(bytes32 _encryptedResponse) external underChallenge defendable onlyDefender {
+    function _challenge(bytes32 _encryptedRequest) private nextMoveIs(Step.ONE_ChallengeStarted) {
+        challenger = _msgSender();
+        encryptedRequest = _encryptedRequest;
+        _updateNextMove();
+    }
+
+    function defend(bytes32 _encryptedResponse) external nextMoveIs(Step.TWO_DefenderDefended) {
         encryptedResponse = _encryptedResponse;
-        challengerRevealDue = block.number + replyOrLoseBlocks;
+        _updateNextMove();
     }
 
-    function challengerReveal(string memory _revealedRequest) external underChallenge challengerRevealable onlyChallenger {
+    function challengerReveal(string memory _revealedRequest) external nextMoveIs(Step.THREE_ChallengerRevealed) {
         bytes32 _encryptedRequest = sha256(abi.encodePacked(_revealedRequest));
         require(_encryptedRequest == encryptedRequest, "GuessWhat: do not match");
         revealedRequest = _revealedRequest;
-
-        defenderRevealDue = block.number + replyOrLoseBlocks;
+        _updateNextMove();
     }
 
-    function defenderReveal(string memory _revealedResponse) external underChallenge defenderRevealable onlyDefender {
+    function defenderReveal(string memory _revealedResponse) external nextMoveIs(Step.FOUR_DefenderRevealed) {
         bytes32 _encryptedResponse = sha256(abi.encodePacked(_revealedResponse));
         require(_encryptedResponse == encryptedResponse, "GuessWhat: do not match");
         revealedResponse = _revealedResponse;
-        _claimTheWinner();
+        _updateNextMove();
+
+        if (nextMover == _msgSender()) {
+            claimWinning();
+        }
     }
 
-    // TODO: one player overdue, the opponent could claim winning directly
-    // Use game step as index, no next step after next step due, the others could just claim to be the winner
+    function claimWinning() public nextMoveIs(Step.FIVE_WinnerClaimed) {
+        _announceWinning();
+        _resetNextMove();
+    }
+
+    function claimWinningBczNoResponse() external noResponse {
+        _announceWinning();
+        _resetNextMove();
+    }
 }
 
 // Return first character of a given string.
