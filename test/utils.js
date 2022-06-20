@@ -14,8 +14,11 @@ const tx = async function (_tx) {
   return (await _tx).wait();
 };
 
+const HashZero = ethers.constants.HashZero;
+
 module.exports = {
   N,
   prepare,
   tx,
+  HashZero,
 };

@@ -114,7 +114,7 @@ contract GuessWhat is Ownable, ERC20 {
     modifier nextMoveIs(Step move) {
         require(nextMove == move, "GuessWhat: move not allowed");
         require(nextMover == address(0) || nextMover == _msgSender(), "GuessWhat: you are not allowed");
-        require(block.number <= nextMoveDeadline, "GuessWhat: you are too late");
+        require(nextMoveDeadline == 0 || block.number <= nextMoveDeadline, "GuessWhat: you are too late");
         _;
     }
 
