@@ -33,6 +33,19 @@ contract GuessWhat is Ownable, ERC20 {
         FOUR_DefenderRevealed
     }
 
+    event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
+    event StartEvent(uint256 indexed id, uint256 round, address indexed challenger, address indexed defender);
+    event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
+    event UpdateStateEvent(
+        uint256 indexed id,
+        uint256 round,
+        uint256 states,
+        address indexed player,
+        address indexed nextPlayer,
+        uint256 nextMoveDeadline,
+        uint256 noResponseSoClaimWinningDeadline
+    );
+
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
         // game.winner = _msgSender();

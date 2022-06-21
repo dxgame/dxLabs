@@ -117,7 +117,7 @@ describe("GuessWhat", function () {
         .connect(addr1)
         .defend(...(await StateLib.getParams({ prevHash, signer: addr1 })))
     )
-      .to.emit(gameLib, "UpdateStateEvent")
+      .to.emit(contract, "UpdateStateEvent")
       .withArgs(
         game.id,
         game.round,
