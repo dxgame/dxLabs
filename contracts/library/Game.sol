@@ -186,9 +186,9 @@ library GameFunctions {
             "GuessWhat: configure your game first please");
 
         game.round++;
-
         _setPlayers(game, state.player, defender);
         _pushState(game, state);
+        emit StartEvent(game.id, game.round, state.player, defender);
     }
 
     function config(
