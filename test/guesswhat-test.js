@@ -6,12 +6,12 @@ const { N, prepare, tx, HashZero } = require("./utils");
 const StateLib = {
   getHash: (prevHash, signer, message) => {
     return ethers.utils.solidityKeccak256(
-      ["types32", "address", "string"],
+      ["string", "address", "string"],
       [prevHash, signer.address, message]
     );
   },
 
-  getParams: async function ({ prevHash, signer, message = "" }) {
+  getParams: async function ({ prevHash = HashZero, signer, message = "" }) {
     const stateHash = StateLib.getHash(prevHash, signer, message);
     const flatSig = await signer.signMessage(stateHash);
     const sig = ethers.utils.splitSignature(flatSig);
@@ -31,8 +31,6 @@ describe("GuessWhat", function () {
       libraries,
       N`10`
     );
-
-    console.log(await addr1.signMessage(0));
   });
 
   it("Should update defender with a new challenge if there's no defender", async function () {
@@ -42,7 +40,7 @@ describe("GuessWhat", function () {
     await tx(
       contract
         .connect(addr1)
-        .challenge(...StateLib.getParams({ signer: addr1 }))
+        .challenge(...(await StateLib.getParams({ signer: addr1 })))
     );
 
     expect(await contract.defender()).to.equal(addr1.address);
@@ -56,12 +54,12 @@ describe("GuessWhat", function () {
     await tx(
       contract
         .connect(addr1)
-        .challenge(...StateLib.getParams({ signer: addr1 }))
+        .challenge(...(await StateLib.getParams({ signer: addr1 })))
     );
     await tx(
       contract
         .connect(addr2)
-        .challenge(...StateLib.getParams({ signer: addr2 }))
+        .challenge(...(await StateLib.getParams({ signer: addr2 })))
     );
 
     expect(await contract.defender()).to.equal(addr1.address);
@@ -75,12 +73,12 @@ describe("GuessWhat", function () {
     await tx(
       contract
         .connect(addr1)
-        .challenge(...StateLib.getParams({ signer: addr1 }))
+        .challenge(...(await StateLib.getParams({ signer: addr1 })))
     );
     await tx(
       contract
         .connect(addr2)
-        .challenge(...StateLib.getParams({ signer: addr2 }))
+        .challenge(...(await StateLib.getParams({ signer: addr2 })))
     );
 
     expect(await contract.defender()).to.equal(addr1.address);
@@ -98,12 +96,12 @@ describe("GuessWhat", function () {
     await tx(
       contract
         .connect(addr1)
-        .challenge(...StateLib.getParams({ signer: addr1 }))
+        .challenge(...(await StateLib.getParams({ signer: addr1 })))
     );
     await tx(
       contract
         .connect(addr2)
-        .challenge(...StateLib.getParams({ signer: addr2 }))
+        .challenge(...(await StateLib.getParams({ signer: addr2 })))
     );
 
     expect(await contract.defender()).to.equal(addr1.address);
@@ -112,7 +110,9 @@ describe("GuessWhat", function () {
     const preBlock = await ethers.provider.getBlock("latest");
 
     await expect(
-      contract.connect(addr1).defend(...StateLib.getParams({ signer: addr1 }))
+      contract
+        .connect(addr1)
+        .defend(...(await StateLib.getParams({ signer: addr1 })))
     )
       .to.emit(contract, "UpdateNextMoveEvent")
       .withArgs(
@@ -129,25 +129,31 @@ describe("GuessWhat", function () {
     expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
 
     await expect(
-      contract.connect(addr1).defend(...StateLib.getParams({ signer: addr1 }))
+      contract
+        .connect(addr1)
+        .defend(...(await StateLib.getParams({ signer: addr1 })))
     ).to.be.revertedWith("GuessWhat: move not allowed");
 
     await tx(
       contract
         .connect(addr1)
-        .challenge(...StateLib.getParams({ signer: addr1 }))
+        .challenge(...(await StateLib.getParams({ signer: addr1 })))
     );
     await expect(
-      contract.connect(addr1).defend(...StateLib.getParams({ signer: addr1 }))
+      contract
+        .connect(addr1)
+        .defend(...(await StateLib.getParams({ signer: addr1 })))
     ).to.be.revertedWith("GuessWhat: move not allowed");
 
     await tx(
       contract
         .connect(addr2)
-        .challenge(...StateLib.getParams({ signer: addr2 }))
+        .challenge(...(await StateLib.getParams({ signer: addr2 })))
     );
     await expect(
-      contract.connect(addr3).defend(...StateLib.getParams({ signer: addr3 }))
+      contract
+        .connect(addr3)
+        .defend(...(await StateLib.getParams({ signer: addr3 })))
     ).to.be.revertedWith("GuessWhat: you are not allowed");
   });
 });
