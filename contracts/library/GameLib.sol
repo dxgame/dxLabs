@@ -45,7 +45,6 @@ library GameLib {
     event StartEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed defender);
     event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
 
-
     function challenger(Game storage game) public view returns (address) {
         return game.players[0];
     }
