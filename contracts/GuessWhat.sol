@@ -24,60 +24,75 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
     }
 */
 
-contract GuessWhat is Ownable, ERC20 {
-    address[] public players;
-    State[] public states;
+struct State {
+    bytes32 prevHash;
 
-    struct State {
-      bytes32 prevHash;
+    address player;
+    string message;
 
-      address player;
-      string message;
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
+}
 
-      uint8 v;
-      bytes32 r;
-      bytes32 s;
-    }
-
-    function _pushState(State memory state) private {
-        states.push(state);
-    }
-
-    function _emptyStates() private view returns (bool) {
-        return states.length == 0;
-    }
-
-    function _lastState() private view returns (State storage){
-        return states[states.length - 1];
-    }
-
-    modifier validState(State memory state) {
-        _validateState(state);
-        _validateChain(state);
-        _;
-    }
-
-    function _validateState(State memory state) private view {
-
-    }
-
-    function _validateChain(State memory state) private view {
-        if (_emptyStates()) return;
-    
-        State storage lastState = _lastState();
-        require(_nextPlayer(lastState) == state.player, "GuessWhat: not for you now");
-        require(_hashState(lastState) == state.prevHash, "GuessWhat: hash not right");
-    }
-
-    function _hashState(State storage state) private view returns (bytes32) {
+library StateFunctions {
+    function getHash(State memory state) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
     }
 
-    function _nextPlayer(State storage state) private view returns (address) {
-        if (players[0] == state.player) return players[1];
-        if (players[1] == state.player) return players[0];
+    function verifySignature(State memory state) public pure {
+        require(ecrecover(getHash(state), state.v, state.r, state.s) == state.player, "GuessWhat: signature not right");
+    }
+}
+
+struct Game {
+    address[2] players;
+    State[] states;
+}
+
+library GameFunctions {
+    using StateFunctions for State;
+
+    function _lastState(Game storage game) private view returns (State storage){
+        return game.states[game.states.length - 1];
+    }
+
+    function _isEmpty(Game storage game) private view returns (bool) {
+        return game.states.length == 0;
+    }
+
+    function _nextPlayer(Game storage game, State storage state) private view returns (address) {
+        if (game.players[0] == state.player) return game.players[1];
+        if (game.players[1] == state.player) return game.players[0];
         revert("GuessWhat: player not right");
     }
+
+    function _verifyChain(Game storage game, State memory state) private view {
+        if (_isEmpty(game)) return;
+    
+        State storage lastState = _lastState(game);
+        require(_nextPlayer(game, lastState) == state.player, "GuessWhat: not for you now");
+        require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
+    }
+
+    modifier validState(Game storage game, State memory state) {
+        state.verifySignature();
+        _verifyChain(game, state);
+        _;
+    }
+
+    function pushState(Game storage game, State memory state) public validState(game, state) {
+        game.states.push(state);
+    }
+}
+
+function isOne(string memory str) pure returns (bool) {
+    return bytes(str)[0] == 0x31;
+}
+
+contract GuessWhat is Ownable, ERC20 {
+    using StateFunctions for State;
+    using GameFunctions for Game;
 
     enum Step {
         ONE_ChallengeStarted,
@@ -223,14 +238,14 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     function challengerReveal(string memory _revealedRequest) external nextMoveIs(Step.THREE_ChallengerRevealed) {
-        bytes32 _encryptedRequest = sha256(abi.encodePacked(_revealedRequest));
+        bytes32 _encryptedRequest = keccak256(abi.encodePacked(_revealedRequest));
         require(_encryptedRequest == encryptedRequest, "GuessWhat: do not match");
         revealedRequest = _revealedRequest;
         _updateNextMove();
     }
 
     function defenderReveal(string memory _revealedResponse) external nextMoveIs(Step.FOUR_DefenderRevealed) {
-        bytes32 _encryptedResponse = sha256(abi.encodePacked(_revealedResponse));
+        bytes32 _encryptedResponse = keccak256(abi.encodePacked(_revealedResponse));
         require(_encryptedResponse == encryptedResponse, "GuessWhat: do not match");
         revealedResponse = _revealedResponse;
         _updateNextMove();
@@ -255,9 +270,4 @@ contract GuessWhat is Ownable, ERC20 {
             ? _claimWinningBczNoResponse()
             : _claimWinning();
     }
-}
-
-// Return first character of a given string.
-function isOne(string memory str) pure returns (bool) {
-    return bytes(str)[0] == 0x31;
 }
