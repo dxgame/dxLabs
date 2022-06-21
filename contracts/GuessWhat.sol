@@ -45,20 +45,32 @@ library StateFunctions {
     }
 }
 
+
 struct Game {
+    address winner;
     address[2] players;
     State[] states;
+
+    uint256 nextMoveDeadline;
+    uint256 noResponseSoClaimWinningDeadline;
 }
 
+using StateFunctions for State;
+
 library GameFunctions {
-    using StateFunctions for State;
+    uint constant public MAX_BLOCKS_PER_MOVE = 200;
+    event WinningEvent(address winner);
+
+    function _isEmpty(Game storage game) private view returns (bool) {
+        return game.states.length == 0;
+    }
 
     function _lastState(Game storage game) private view returns (State storage){
         return game.states[game.states.length - 1];
     }
 
-    function _isEmpty(Game storage game) private view returns (bool) {
-        return game.states.length == 0;
+    function _lastPlayer(Game storage game) private view returns (address) {
+        return _lastState(game).player;
     }
 
     function _nextPlayer(Game storage game, State storage state) private view returns (address) {
@@ -75,24 +87,85 @@ library GameFunctions {
         require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
     }
 
+    modifier empty(Game storage game) {
+        require(_isEmpty(game), "GuessWhat: game already started");
+        _;
+    }
+
+    modifier validDefender(Game storage game, address defender) {
+        require(game.winner == address(0) || game.winner == defender, "GuessWhat: defender should be the winner");
+        _;
+    }
+
+    modifier beforeDeadline(Game storage game) {
+        require(game.nextMoveDeadline == 0 || block.number <= game.nextMoveDeadline, "GuessWhat: you are too late");
+        _;
+    }
+
+    modifier noResponse(Game storage game, address winner) {
+        require(block.number > game.nextMoveDeadline, "GuessWhat: you are too early");
+        require(block.number <= game.noResponseSoClaimWinningDeadline, "GuessWhat: you are too late");
+        require(_lastPlayer(game) == winner, "GuessWhat: you are not the winner");
+        _;
+    }
+
     modifier validState(Game storage game, State memory state) {
         state.verifySignature();
         _verifyChain(game, state);
         _;
     }
 
-    function pushState(Game storage game, State memory state) public validState(game, state) {
+    function _setPlayers(Game storage game, address challenger, address defender) private validDefender(game, defender) {
+        game.players[0] = challenger;
+        game.players[1] = defender;
+    }
+
+    function _updateDeadlines(Game storage game) private {
+        game.nextMoveDeadline = block.number + MAX_BLOCKS_PER_MOVE;
+        game.noResponseSoClaimWinningDeadline = game.nextMoveDeadline + MAX_BLOCKS_PER_MOVE;
+    }
+
+    function pushState(Game storage game, State memory state) public beforeDeadline(game) validState(game, state) {
         game.states.push(state);
+        _updateDeadlines(game);
+    }
+
+    function start(Game storage game, State memory state, address defender) public empty(game) {
+        _setPlayers(game, state.player, defender);
+        pushState(game, state);
+    }
+
+    function _announceWinning(Game storage game, address winner) private {
+        game.winner = winner;
+        emit WinningEvent(winner);
+    }
+
+    function _reset(Game storage game) private {
+        delete game.players;
+        delete game.states;
+        game.nextMoveDeadline = 0;
+        game.noResponseSoClaimWinningDeadline = 0;
+    }
+
+    function _claimWinningBczNoResponse(Game storage game, State memory state) private noResponse(game, state.player) {
+        _announceWinning(game, state.player);
+        _reset();
+    }
+
+    function claimWinning(Game storage game) public {
+        // return _noResponse()
+        //     ? _claimWinningBczNoResponse()
+        //     : _claimWinning();
     }
 }
+
+using GameFunctions for Game;
 
 function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
 }
 
 contract GuessWhat is Ownable, ERC20 {
-    using StateFunctions for State;
-    using GameFunctions for Game;
 
     enum Step {
         ONE_ChallengeStarted,
@@ -119,7 +192,6 @@ contract GuessWhat is Ownable, ERC20 {
     string public revealedRequest;
     string public revealedResponse;
 
-    event WinningEvent(address winner);
     event UpdateNextMoveEvent(
         Step nextMove,
         address lastMover,
