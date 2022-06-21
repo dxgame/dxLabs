@@ -20,12 +20,12 @@ const StateLib = {
 };
 
 describe("GuessWhat", function () {
-  let gameLib, contract, owner, addr1, addr2, addr3;
+  let gameLib, contract, addr1, addr2, addr3;
 
   beforeEach(async function () {
     [gameLib] = await prepare("GameLib");
     const libraries = { GameLib: gameLib.address };
-    [contract, owner, addr1, addr2, addr3] = await prepare(
+    [contract, , addr1, addr2, addr3] = await prepare(
       "GuessWhat",
       libraries,
       N`10`
