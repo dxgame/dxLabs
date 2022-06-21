@@ -7,7 +7,14 @@ describe("GuessWhat", function () {
   let contract, addr1, addr2, addr3;
 
   beforeEach(async function () {
-    [contract, , addr1, addr2, addr3] = await prepare("GuessWhat", N`10`);
+    // const [stateLib] = await prepare("StateLib");
+    const [gameLib] = await prepare("GameLib");
+    const libraries = { GameLib: gameLib.address };
+    [contract, , addr1, addr2, addr3] = await prepare(
+      "GuessWhat",
+      libraries,
+      N`10`
+    );
   });
 
   it("Should update defender with a new challenge if there's no defender", async function () {

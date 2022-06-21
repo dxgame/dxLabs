@@ -2,9 +2,9 @@ const { ethers } = require("hardhat");
 
 const N = (n) => ethers.utils.parseEther(n.toString());
 
-const prepare = async function (contractName, ...args) {
+const prepare = async function (contractName, libraries, ...args) {
   const signers = await ethers.getSigners();
-  const Contract = await ethers.getContractFactory(contractName);
+  const Contract = await ethers.getContractFactory(contractName, { libraries });
   const contract = await Contract.deploy(...args);
 
   await contract.deployed();

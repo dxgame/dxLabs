@@ -21,7 +21,6 @@ function strEqual(string memory a, string memory b) pure returns (bool) {
 }
 
 contract GuessWhat is Ownable, ERC20 {
-    using StateLib for StateLib.State;
     using GameLib for GameLib.Game;
 
     GameLib.Game public game;
@@ -60,7 +59,7 @@ contract GuessWhat is Ownable, ERC20 {
 
     function challenge(
         bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
-    ) private nextMoveIs(Step.ONE_ChallengeStarted) {
+    ) external nextMoveIs(Step.ONE_ChallengeStarted) {
         game.start(
             StateLib.State(prehash, player, encryptedRequest, v, r, s),
             game.winner

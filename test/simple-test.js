@@ -5,7 +5,7 @@ describe("SimpleToken", function () {
   let contract, addr1;
 
   beforeEach(async function () {
-    [contract, , addr1] = await prepare("SimpleToken", N`10`);
+    [contract, , addr1] = await prepare("SimpleToken", {}, N`10`);
   });
 
   it("Should return the new totalSupply once it's changed", async function () {
