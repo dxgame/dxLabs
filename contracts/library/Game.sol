@@ -67,6 +67,15 @@ library GameFunctions {
     event StartEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed defender);
     event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
 
+
+    function challenger(Game storage game) public view returns (address) {
+        return game.players[0];
+    }
+
+    function defender(Game storage game) public view returns (address) {
+        return game.players[1];
+    }
+
     function _isEmpty(Game storage game) private view returns (bool) {
         return game.states.length == 0;
     }
@@ -113,8 +122,8 @@ library GameFunctions {
         _;
     }
 
-    modifier validDefender(Game storage game, address defender) {
-        require(game.winner == address(0) || game.winner == defender, "GuessWhat: defender should be the winner");
+    modifier validDefender(Game storage game, address _defender) {
+        require(game.winner == address(0) || game.winner == _defender, "GuessWhat: defender should be the winner");
         _;
     }
 
@@ -137,9 +146,9 @@ library GameFunctions {
         _;
     }
 
-    function _setPlayers(Game storage game, address challenger, address defender) private validDefender(game, defender) {
-        game.players[0] = challenger;
-        game.players[1] = defender;
+    function _setPlayers(Game storage game, address _challenger, address _defender) private validDefender(game, _defender) {
+        game.players[0] = _challenger;
+        game.players[1] = _defender;
     }
 
     function _updateDeadlines(Game storage game) private {
@@ -168,9 +177,9 @@ library GameFunctions {
     function _claimWinning(
         Game storage game,
         State memory state,
-        function (State[] storage) pure returns (address) whoWins
+        function (Game storage) pure returns (address) whoWins
     ) private {
-        address winner = whoWins(game.states);
+        address winner = whoWins(game);
         require(winner == state.player, "GuessWhat: you not winner");
         _announceWinning(game, state.player);
         _reset(game, state.player);
@@ -181,14 +190,14 @@ library GameFunctions {
         _reset(game, state.player);
     }
 
-    function _start(Game storage game, State memory state, address defender) private empty(game) {
+    function _start(Game storage game, State memory state, address _defender) private empty(game) {
         require(game.MAX_STATES !=0 && game.MAX_BLOCKS_PER_MOVE != 0,
             "GuessWhat: configure your game first please");
 
         game.round++;
-        _setPlayers(game, state.player, defender);
+        _setPlayers(game, state.player, _defender);
         _pushState(game, state);
-        emit StartEvent(game.id, game.round, state.player, defender);
+        emit StartEvent(game.id, game.round, state.player, _defender);
     }
 
     function config(
@@ -202,22 +211,22 @@ library GameFunctions {
         game.MAX_STATES = maxStates;
     }
 
-    function start(Game storage game, State memory state, address defender) internal {
+    function start(Game storage game, State memory state, address _defender) internal {
         if (game.ABLE_TO_RESET_AFTER_ABANDONED && _lastGameAbandoned(game)) {
             _reset(game, state.player);
         }
-        _start(game, state, defender);
+        _start(game, state, _defender);
     }
 
     function play(
         Game storage game,
         State memory state,
-        function (State[] storage) pure returns (address) whoWins
+        function (Game storage) pure returns (address) whoWins
     ) internal notEmpty(game) {
         _pushState(game, state);
 
         if (game.states.length == game.MAX_STATES
-            && whoWins(game.states) == state.player
+            && whoWins(game) == state.player
         ) {
             _claimWinning(game, state, whoWins);
         }
@@ -226,7 +235,7 @@ library GameFunctions {
     function claimWinning(
         Game storage game,
         State memory state,
-        function (State[] storage) pure returns (address) whoWins
+        function (Game storage) pure returns (address) whoWins
     ) internal {
         state.verifySignature();
 

@@ -10,6 +10,12 @@ function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
 }
 
+function whoWins(Game _game) private pure returns (address) {
+    string memory revealedRequest = _game.states[2].message;
+    string memory revealedResponse = _game.states[3].message;
+    return isOne(revealedResponse) == isOne(revealedRequest) ? game.defender() : game.challenger();
+}
+
 contract GuessWhat is Ownable, ERC20 {
     Game public game;
 
@@ -38,15 +44,11 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     function challenger() public view returns (address) {
-        return game.players[0];
+        return game.challenger();
     }
 
     function defender() public view returns (address) {
-        return game.players[1];
-    }
-
-    function _whoWins() private view returns (address) {
-        return isOne(revealedResponse) == isOne(revealedRequest) ? defender : challenger;
+        return game.defender();
     }
 
     modifier nextMoveIs(Step move) {
@@ -54,19 +56,28 @@ contract GuessWhat is Ownable, ERC20 {
         _;
     }
 
-    function challenge(string memory encryptedRequest, address _player, uint8 v, bytes32 r, bytes32 s) private nextMoveIs(Step.ONE_ChallengeStarted) {
+    function challenge(
+        bytes32 prehash, address _player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
+    ) private nextMoveIs(Step.ONE_ChallengeStarted) {
         game.start(
-            State(0, _player, encryptedRequest, v, r, s),
+            State(prehash, _player, encryptedRequest, v, r, s),
             game.winner
         );
     }
 
-    function defend(bytes32 _encryptedResponse) external nextMoveIs(Step.TWO_DefenderDefended) {
-        encryptedResponse = _encryptedResponse;
-        _updateNextMove();
+    function defend(
+        bytes32 prehash, address _player, string memory encryptedResponse, uint8 v, bytes32 r, bytes32 s
+    ) external nextMoveIs(Step.TWO_DefenderDefended) {
+        game.play(
+            State(prehash, _player, encryptedResponse, v, r, s),
+            whoWins
+        );
     }
 
-    function challengerReveal(string memory _revealedRequest) external nextMoveIs(Step.THREE_ChallengerRevealed) {
+    //
+    function challengerReveal(
+        bytes32 prehash, address _player, string memory revealedRequest, uint8 v, bytes32 r, bytes32 s
+    )(string memory _revealedRequest) external nextMoveIs(Step.THREE_ChallengerRevealed) {
         bytes32 _encryptedRequest = keccak256(abi.encodePacked(_revealedRequest));
         require(_encryptedRequest == encryptedRequest, "GuessWhat: do not match");
         revealedRequest = _revealedRequest;
