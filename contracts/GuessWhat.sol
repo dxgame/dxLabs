@@ -11,6 +11,7 @@ function isOne(string memory str) pure returns (bool) {
 }
 
 contract GuessWhat is Ownable, ERC20 {
+    Game public game;
 
     enum Step {
         ONE_ChallengeStarted,

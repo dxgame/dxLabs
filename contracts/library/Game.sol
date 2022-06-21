@@ -209,8 +209,18 @@ library GameFunctions {
         _start(game, state, defender);
     }
 
-    function play(Game storage game, State memory state) internal notEmpty(game) {
+    function play(
+        Game storage game,
+        State memory state,
+        function (State[] storage) pure returns (address) whoWins
+    ) internal notEmpty(game) {
         _pushState(game, state);
+
+        if (game.states.length == game.MAX_STATES
+            && whoWins(game.states) == state.player
+        ) {
+            _claimWinning(game, state, whoWins);
+        }
     }
 
     function claimWinning(
