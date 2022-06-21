@@ -18,6 +18,9 @@ library StateLib {
     }
 
     function verifySignature(State memory state) internal pure {
-        require(ecrecover(getHash(state), state.v, state.r, state.s) == state.player, "GuessWhat: signature not right");
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, getHash(state)));
+
+        require(ecrecover(prefixedHash, state.v, state.r, state.s) == state.player, "GuessWhat: signature not right");
     }
 }
