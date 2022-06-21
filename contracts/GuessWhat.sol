@@ -17,12 +17,8 @@ contract GuessWhat is Ownable, ERC20 {
         ONE_ChallengeStarted,
         TWO_DefenderDefended,
         THREE_ChallengerRevealed,
-        FOUR_DefenderRevealed,
-        FIVE_WinnerClaimed
+        FOUR_DefenderRevealed
     }
-
-    address public defender;
-    address public challenger;
 
     Step public nextMove = Step.ONE_ChallengeStarted;
     address public lastMover;
@@ -32,122 +28,37 @@ contract GuessWhat is Ownable, ERC20 {
     uint public nextMoveDeadline;
     uint public noResponseSoClaimWinningDeadline;
 
-    bytes32 private encryptedRequest;
-    bytes32 private encryptedResponse;
-
     string public revealedRequest;
     string public revealedResponse;
 
-    event UpdateNextMoveEvent(
-        Step nextMove,
-        address lastMover,
-        address nextMover,
-        uint nextMoveDeadline,
-        uint noResponseSoClaimWinningDeadline
-    );
-    event ResetNextMoveEvent(address lastMover);
-
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
+        game.winner = _msgSender();
+        game.config(true, 100, 4);
+    }
+
+    function challenger() public view returns (address) {
+        return game.players[0];
+    }
+
+    function defender() public view returns (address) {
+        return game.players[1];
     }
 
     function _whoWins() private view returns (address) {
         return isOne(revealedResponse) == isOne(revealedRequest) ? defender : challenger;
     }
 
-    function _updateNextMove() private {
-        lastMover = _msgSender();
-        Step currentMove = nextMove;
-        nextMove = Step((uint(currentMove) + 1) % 5);
-
-        nextMoveDeadline = block.number + MAX_BLOCKS_PER_MOVE;
-        noResponseSoClaimWinningDeadline = nextMoveDeadline + MAX_BLOCKS_PER_MOVE;
-
-        address winner = nextMove == Step.FIVE_WinnerClaimed ? _whoWins() : address(0);
-
-        nextMover = [
-            address(0),
-            defender,
-            challenger,
-            defender,
-            winner
-        ][uint(nextMove)];
-
-        emit UpdateNextMoveEvent(
-            nextMove,
-            lastMover,
-            nextMover,
-            nextMoveDeadline,
-            noResponseSoClaimWinningDeadline
-        );
-    }
-
-    function _resetNextMove() private {
-        lastMover = _msgSender();
-
-        nextMove = Step.ONE_ChallengeStarted;
-        nextMover = address(0);
-        nextMoveDeadline = 0;
-        noResponseSoClaimWinningDeadline = 0;
-
-        encryptedRequest = 0;
-        encryptedResponse = 0;
-        revealedRequest = "";
-        revealedResponse = "";
-    
-        emit ResetNextMoveEvent(lastMover);
-    }
-
     modifier nextMoveIs(Step move) {
-        require(nextMove == move, "GuessWhat: move not allowed");
-        require(nextMover == address(0) || nextMover == _msgSender(), "GuessWhat: you are not allowed");
-        require(nextMoveDeadline == 0 || block.number <= nextMoveDeadline, "GuessWhat: you are too late");
+        require(Step(game.states.length) == move, "GuessWhat: move not allowed");
         _;
     }
 
-    modifier noResponse() {
-        require(lastMover == _msgSender(), "GuessWhat: not the account");
-        require(block.number > nextMoveDeadline, "GuessWhat: you are too early");
-        require(block.number <= noResponseSoClaimWinningDeadline, "GuessWhat: you are too late");
-        _;
-    }
-
-    function _noResponse() private view returns (bool) {
-        return (block.number > nextMoveDeadline)
-            && (block.number <= noResponseSoClaimWinningDeadline);
-    }
-
-    function _noDefender() private view returns (bool) {
-        return defender == address(0);
-    }
-
-    function _lastGameAbandoned() private view returns (bool) {
-        return (noResponseSoClaimWinningDeadline != 0)
-            && (block.number > noResponseSoClaimWinningDeadline);
-    }
-
-    function _announceWinning() private {
-        defender = _msgSender();
-        // emit WinningEvent(defender);
-    }
-
-    function challenge(bytes32 _encryptedRequest) external {
-        if (_noDefender()) {
-            _announceWinning();
-            return;
-        }
-
-        if (_lastGameAbandoned()) {
-            _resetNextMove();
-        }
-    
-        _challenge(_encryptedRequest);
-    }
-
-    function _challenge(bytes32 _encryptedRequest) private nextMoveIs(Step.ONE_ChallengeStarted) {
-        challenger = _msgSender();
-        encryptedRequest = _encryptedRequest;
-        _updateNextMove();
+    function challenge(string memory encryptedRequest, address _player, uint8 v, bytes32 r, bytes32 s) private nextMoveIs(Step.ONE_ChallengeStarted) {
+        game.start(
+            State(0, _player, encryptedRequest, v, r, s),
+            game.winner
+        );
     }
 
     function defend(bytes32 _encryptedResponse) external nextMoveIs(Step.TWO_DefenderDefended) {
@@ -173,19 +84,7 @@ contract GuessWhat is Ownable, ERC20 {
         }
     }
 
-    function _claimWinning() private nextMoveIs(Step.FIVE_WinnerClaimed) {
-        _announceWinning();
-        _resetNextMove();
-    }
-
-    function _claimWinningBczNoResponse() private noResponse {
-        _announceWinning();
-        _resetNextMove();
-    }
-
     function claimWinning() external {
-        return _noResponse()
-            ? _claimWinningBczNoResponse()
-            : _claimWinning();
+
     }
 }
