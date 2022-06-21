@@ -13,20 +13,19 @@ const StateLib = {
 
   getParams: async function ({ prevHash = HashZero, signer, message = "" }) {
     const stateHash = StateLib.getHash(prevHash, signer, message);
-    const flatSig = await signer.signMessage(stateHash);
+    const flatSig = await signer.signMessage(ethers.utils.arrayify(stateHash));
     const sig = ethers.utils.splitSignature(flatSig);
-
-    return [stateHash, signer.address, message, sig.v, sig.r, sig.s];
+    return [prevHash, signer.address, message, sig.v, sig.r, sig.s];
   },
 };
 
 describe("GuessWhat", function () {
-  let contract, addr1, addr2, addr3;
+  let contract, owner, addr1, addr2, addr3;
 
   beforeEach(async function () {
     const [gameLib] = await prepare("GameLib");
     const libraries = { GameLib: gameLib.address };
-    [contract, , addr1, addr2, addr3] = await prepare(
+    [contract, owner, addr1, addr2, addr3] = await prepare(
       "GuessWhat",
       libraries,
       N`10`
@@ -36,6 +35,9 @@ describe("GuessWhat", function () {
   it("Should update defender with a new challenge if there's no defender", async function () {
     expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
     expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
+
+    console.log("Owner: ", owner.address);
+    console.log("Addr1: ", addr1.address);
 
     await tx(
       contract
