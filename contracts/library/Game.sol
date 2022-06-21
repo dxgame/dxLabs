@@ -42,7 +42,6 @@ library StateFunctions {
     }
 }
 
-
 struct Game {
     uint256 id;
     uint256 round;
@@ -59,9 +58,8 @@ struct Game {
     uint256 noResponseSoClaimWinningDeadline;
 }
 
-using StateFunctions for State;
-
 library GameFunctions {
+    using StateFunctions for State;
 
     event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
     event StartEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed defender);
@@ -177,7 +175,7 @@ library GameFunctions {
     function _claimWinning(
         Game storage game,
         State memory state,
-        function (Game storage) pure returns (address) whoWins
+        function (Game storage) returns (address) whoWins
     ) private {
         address winner = whoWins(game);
         require(winner == state.player, "GuessWhat: you not winner");
@@ -221,7 +219,7 @@ library GameFunctions {
     function play(
         Game storage game,
         State memory state,
-        function (Game storage) pure returns (address) whoWins
+        function (Game storage) returns (address) whoWins
     ) internal notEmpty(game) {
         _pushState(game, state);
 
@@ -235,7 +233,7 @@ library GameFunctions {
     function claimWinning(
         Game storage game,
         State memory state,
-        function (Game storage) pure returns (address) whoWins
+        function (Game storage) returns (address) whoWins
     ) internal {
         state.verifySignature();
 
@@ -244,5 +242,3 @@ library GameFunctions {
             : _claimWinning(game, state, whoWins);
     }
 }
-
-using GameFunctions for Game;

@@ -6,6 +6,7 @@ const prepare = async function (contractName, ...args) {
   const signers = await ethers.getSigners();
   const Contract = await ethers.getContractFactory(contractName);
   const contract = await Contract.deploy(...args);
+
   await contract.deployed();
   return [contract, ...signers];
 };

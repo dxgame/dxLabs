@@ -5,7 +5,247 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./library/Game.sol";
+/*
+    step 0: ready to start
+
+    step 1: challenger starts new challenge
+    step 2: defender defends
+
+    step 3: challenger reveals
+    step 4: defender reveals
+
+    step 5: winner claims winning
+
+    if (the next mover did not move before nextMoveDeadline) {
+        the current mover can claim winning in noResponseSoClaimWinningDeadline
+    }
+
+    if (no body do any shit before noResponseSoClaimWinningDeadline) {
+        anyone can start a new challenge
+    }
+*/
+
+struct State {
+    bytes32 prevHash;
+
+    address player;
+    string message;
+
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
+}
+
+library StateFunctions {
+    function getHash(State memory state) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
+    }
+
+    function verifySignature(State memory state) internal pure {
+        require(ecrecover(getHash(state), state.v, state.r, state.s) == state.player, "GuessWhat: signature not right");
+    }
+}
+
+struct Game {
+    uint256 id;
+    uint256 round;
+
+    bool ABLE_TO_RESET_AFTER_ABANDONED;
+    uint256 MAX_BLOCKS_PER_MOVE;
+    uint256 MAX_STATES;
+
+    address winner;
+    address[2] players;
+    State[] states;
+
+    uint256 nextMoveDeadline;
+    uint256 noResponseSoClaimWinningDeadline;
+}
+
+library GameFunctions {
+    using StateFunctions for State;
+
+    event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
+    event StartEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed defender);
+    event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
+
+
+    function challenger(Game storage game) public view returns (address) {
+        return game.players[0];
+    }
+
+    function defender(Game storage game) public view returns (address) {
+        return game.players[1];
+    }
+
+    function _isEmpty(Game storage game) private view returns (bool) {
+        return game.states.length == 0;
+    }
+
+    function _lastState(Game storage game) private view returns (State storage){
+        return game.states[game.states.length - 1];
+    }
+
+    function _lastPlayer(Game storage game) private view returns (address) {
+        return _lastState(game).player;
+    }
+
+    function _nextPlayer(Game storage game, State storage state) private view returns (address) {
+        if (game.players[0] == state.player) return game.players[1];
+        if (game.players[1] == state.player) return game.players[0];
+        revert("GuessWhat: player not right");
+    }
+
+    function _verifyChain(Game storage game, State memory state) private view {
+        if (_isEmpty(game)) return;
+    
+        State storage lastState = _lastState(game);
+        require(_nextPlayer(game, lastState) == state.player, "GuessWhat: not for you now");
+        require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
+    }
+    
+    function _noResponse(Game storage game) private view returns (bool) {
+        return (block.number > game.nextMoveDeadline)
+            && (block.number <= game.noResponseSoClaimWinningDeadline);
+    }
+
+    function _lastGameAbandoned(Game storage game) private view returns (bool) {
+        return (game.noResponseSoClaimWinningDeadline != 0)
+            && (block.number > game.noResponseSoClaimWinningDeadline);
+    }
+
+    modifier empty(Game storage game) {
+        require(_isEmpty(game), "GuessWhat: game already started");
+        _;
+    }
+
+    modifier notEmpty(Game storage game) {
+        require(!_isEmpty(game), "GuessWhat: game not started");
+        _;
+    }
+
+    modifier validDefender(Game storage game, address _defender) {
+        require(game.winner == address(0) || game.winner == _defender, "GuessWhat: defender should be the winner");
+        _;
+    }
+
+    modifier beforeDeadline(Game storage game) {
+        require(game.nextMoveDeadline == 0 || block.number <= game.nextMoveDeadline, "GuessWhat: you are too late");
+        _;
+    }
+
+    modifier noResponse(Game storage game, address winner) {
+        require(block.number > game.nextMoveDeadline, "GuessWhat: you are too early");
+        require(block.number <= game.noResponseSoClaimWinningDeadline, "GuessWhat: you are too late");
+        require(_lastPlayer(game) == winner, "GuessWhat: you are not the winner");
+        _;
+    }
+
+    modifier validNewState(Game storage game, State memory state) {
+        require(game.states.length < game.MAX_STATES, "GuessWhat: states overflow");
+        state.verifySignature();
+        _verifyChain(game, state);
+        _;
+    }
+
+    function _setPlayers(Game storage game, address _challenger, address _defender) private validDefender(game, _defender) {
+        game.players[0] = _challenger;
+        game.players[1] = _defender;
+    }
+
+    function _updateDeadlines(Game storage game) private {
+        game.nextMoveDeadline = block.number + game.MAX_BLOCKS_PER_MOVE;
+        game.noResponseSoClaimWinningDeadline = game.nextMoveDeadline + game.MAX_BLOCKS_PER_MOVE;
+    }
+
+    function _pushState(Game storage game, State memory state) private beforeDeadline(game) validNewState(game, state) {
+        game.states.push(state);
+        _updateDeadlines(game);
+    }
+
+    function _announceWinning(Game storage game, address winner) private {
+        game.winner = winner;
+        emit WinningEvent(game.id, game.round, winner);
+    }
+
+    function _reset(Game storage game, address player) private {
+        delete game.players;
+        delete game.states;
+        game.nextMoveDeadline = 0;
+        game.noResponseSoClaimWinningDeadline = 0;
+        emit ResetEvent(game.id, game.round, player);
+    }
+
+    function _claimWinning(
+        Game storage game,
+        State memory state,
+        function (Game storage) returns (address) whoWins
+    ) private {
+        address winner = whoWins(game);
+        require(winner == state.player, "GuessWhat: you not winner");
+        _announceWinning(game, state.player);
+        _reset(game, state.player);
+    }
+
+    function _claimWinningBczNoResponse(Game storage game, State memory state) private noResponse(game, state.player) {
+        _announceWinning(game, state.player);
+        _reset(game, state.player);
+    }
+
+    function _start(Game storage game, State memory state, address _defender) private empty(game) {
+        require(game.MAX_STATES !=0 && game.MAX_BLOCKS_PER_MOVE != 0,
+            "GuessWhat: configure your game first please");
+
+        game.round++;
+        _setPlayers(game, state.player, _defender);
+        _pushState(game, state);
+        emit StartEvent(game.id, game.round, state.player, _defender);
+    }
+
+    function config(
+        Game storage game,
+        bool ableToResetAfterAbandoned,
+        uint256 maxBlocksPerMove,
+        uint256 maxStates
+    ) internal {
+        game.ABLE_TO_RESET_AFTER_ABANDONED = ableToResetAfterAbandoned;
+        game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
+        game.MAX_STATES = maxStates;
+    }
+
+    function start(Game storage game, State memory state, address _defender) internal {
+        if (game.ABLE_TO_RESET_AFTER_ABANDONED && _lastGameAbandoned(game)) {
+            _reset(game, state.player);
+        }
+        _start(game, state, _defender);
+    }
+
+    function play(
+        Game storage game,
+        State memory state,
+        function (Game storage) returns (address) whoWins
+    ) internal notEmpty(game) {
+        _pushState(game, state);
+
+        if (game.states.length == game.MAX_STATES
+            && whoWins(game) == state.player
+        ) {
+            _claimWinning(game, state, whoWins);
+        }
+    }
+
+    function claimWinning(
+        Game storage game,
+        State memory state,
+        function (Game storage) returns (address) whoWins
+    ) internal {
+        state.verifySignature();
+
+        return _noResponse(game)
+            ? _claimWinningBczNoResponse(game, state)
+            : _claimWinning(game, state, whoWins);
+    }
+}
 
 function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
@@ -15,13 +255,23 @@ function hashHex(string memory str) pure returns (string memory) {
     return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
 }
 
-function whoWins(Game storage game) pure returns (address) {
-    string memory revealedRequest = game.states[2].message;
-    string memory revealedResponse = game.states[3].message;
-    return isOne(revealedResponse) == isOne(revealedRequest) ? game.defender() : game.challenger();
+function strEqual(string memory a, string memory b) pure returns (bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+}
+
+using StateFunctions for State;
+using GameFunctions for Game;
+
+function whoWins(Game storage _game) view returns (address) {
+    string memory revealedRequest = _game.states[2].message;
+    string memory revealedResponse = _game.states[3].message;
+    return isOne(revealedResponse) == isOne(revealedRequest) ? _game.defender() : _game.challenger();
 }
 
 contract GuessWhat is Ownable, ERC20 {
+    using StateFunctions for State;
+    using GameFunctions for Game;
+
     Game public game;
 
     enum Step {
@@ -71,7 +321,10 @@ contract GuessWhat is Ownable, ERC20 {
     function challengerReveal(
         bytes32 prehash, address player, string memory revealedRequest, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
-        require(game.states[0].message == hashHex(revealedRequest), "GuessWhat: do not match");
+        require(
+            strEqual(game.states[0].message, hashHex(revealedRequest)),
+            "GuessWhat: do not match"
+        );
 
         game.play(
             State(prehash, player, revealedRequest, v, r, s),
@@ -82,7 +335,10 @@ contract GuessWhat is Ownable, ERC20 {
     function defenderReveal(
         bytes32 prehash, address player, string memory revealedResponse, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.FOUR_DefenderRevealed) {
-        require(game.states[1].message == hashHex(revealedResponse), "GuessWhat: do not match");
+        require(
+            strEqual(game.states[1].message, hashHex(revealedResponse)),
+            "GuessWhat: do not match"
+        );
 
         game.play(
             State(prehash, player, revealedResponse, v, r, s),
