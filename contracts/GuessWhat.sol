@@ -25,6 +25,60 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 */
 
 contract GuessWhat is Ownable, ERC20 {
+    address[] public players;
+    State[] public states;
+
+    struct State {
+      bytes32 prevHash;
+
+      address player;
+      string message;
+
+      uint8 v;
+      bytes32 r;
+      bytes32 s;
+    }
+
+    function _pushState(State memory state) private {
+        states.push(state);
+    }
+
+    function _emptyStates() private view returns (bool) {
+        return states.length == 0;
+    }
+
+    function _lastState() private view returns (State storage){
+        return states[states.length - 1];
+    }
+
+    modifier validState(State memory state) {
+        _validateState(state);
+        _validateChain(state);
+        _;
+    }
+
+    function _validateState(State memory state) private view {
+
+    }
+
+    function _validateChain(State memory state) private view {
+        if (_emptyStates()) return;
+    
+        State storage lastState = _lastState();
+        require(_nextPlayer(lastState) == state.player, "GuessWhat: not for you now");
+        require(_hashState(lastState) == state.prevHash, "GuessWhat: hash not right");
+    }
+
+    function _hashState(State storage state) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
+    }
+
+    function _nextPlayer(State storage state) private view returns (address) {
+        if (players[0] == state.player) return players[1];
+        if (players[1] == state.player) return players[0];
+        revert("GuessWhat: player not right");
+    }
+
     enum Step {
         ONE_ChallengeStarted,
         TWO_DefenderDefended,
