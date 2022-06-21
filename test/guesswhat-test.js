@@ -111,6 +111,7 @@ describe("GuessWhat", function () {
     const preBlock = await ethers.provider.getBlock("latest");
     const prevHash = await contract.lastStateHash();
     const game = await contract.game();
+    const MAX_BLOCKS_PER_MOVE = game.MAX_BLOCKS_PER_MOVE.toNumber();
 
     await expect(
       contract
@@ -124,8 +125,8 @@ describe("GuessWhat", function () {
         2,
         addr1.address,
         addr2.address,
-        preBlock.number + 1 + 200,
-        preBlock.number + 1 + 400
+        preBlock.number + 1 + MAX_BLOCKS_PER_MOVE,
+        preBlock.number + 1 + MAX_BLOCKS_PER_MOVE * 2
       );
   });
 
@@ -159,6 +160,6 @@ describe("GuessWhat", function () {
       contract
         .connect(addr3)
         .defend(...(await StateLib.getParams({ signer: addr3 })))
-    ).to.be.revertedWith("GuessWhat: you are not allowed");
+    ).to.be.revertedWith("GuessWhat: not for you now");
   });
 });
