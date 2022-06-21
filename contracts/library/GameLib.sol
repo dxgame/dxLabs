@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
+import "./StateLib.sol";
 
 /*
     step 0: ready to start
@@ -21,45 +22,24 @@ pragma solidity ^0.8.14;
     }
 */
 
-struct State {
-    bytes32 prevHash;
+library GameLib {
+    using StateLib for StateLib.State;
 
-    address player;
-    string message;
+    struct Game {
+        uint256 id;
+        uint256 round;
 
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
-}
+        bool ABLE_TO_RESET_AFTER_ABANDONED;
+        uint256 MAX_BLOCKS_PER_MOVE;
+        uint256 MAX_STATES;
 
-library StateFunctions {
-    function getHash(State memory state) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
+        address winner;
+        address[2] players;
+        StateLib.State[] states;
+
+        uint256 nextMoveDeadline;
+        uint256 noResponseSoClaimWinningDeadline;
     }
-
-    function verifySignature(State memory state) internal pure {
-        require(ecrecover(getHash(state), state.v, state.r, state.s) == state.player, "GuessWhat: signature not right");
-    }
-}
-
-struct Game {
-    uint256 id;
-    uint256 round;
-
-    bool ABLE_TO_RESET_AFTER_ABANDONED;
-    uint256 MAX_BLOCKS_PER_MOVE;
-    uint256 MAX_STATES;
-
-    address winner;
-    address[2] players;
-    State[] states;
-
-    uint256 nextMoveDeadline;
-    uint256 noResponseSoClaimWinningDeadline;
-}
-
-library GameFunctions {
-    using StateFunctions for State;
 
     event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
     event StartEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed defender);
@@ -78,7 +58,7 @@ library GameFunctions {
         return game.states.length == 0;
     }
 
-    function _lastState(Game storage game) private view returns (State storage){
+    function _lastState(Game storage game) private view returns (StateLib.State storage){
         return game.states[game.states.length - 1];
     }
 
@@ -86,16 +66,16 @@ library GameFunctions {
         return _lastState(game).player;
     }
 
-    function _nextPlayer(Game storage game, State storage state) private view returns (address) {
+    function _nextPlayer(Game storage game, StateLib.State storage state) private view returns (address) {
         if (game.players[0] == state.player) return game.players[1];
         if (game.players[1] == state.player) return game.players[0];
         revert("GuessWhat: player not right");
     }
 
-    function _verifyChain(Game storage game, State memory state) private view {
+    function _verifyChain(Game storage game, StateLib.State memory state) private view {
         if (_isEmpty(game)) return;
     
-        State storage lastState = _lastState(game);
+        StateLib.State storage lastState = _lastState(game);
         require(_nextPlayer(game, lastState) == state.player, "GuessWhat: not for you now");
         require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
     }
@@ -137,7 +117,7 @@ library GameFunctions {
         _;
     }
 
-    modifier validNewState(Game storage game, State memory state) {
+    modifier validNewState(Game storage game, StateLib.State memory state) {
         require(game.states.length < game.MAX_STATES, "GuessWhat: states overflow");
         state.verifySignature();
         _verifyChain(game, state);
@@ -154,7 +134,7 @@ library GameFunctions {
         game.noResponseSoClaimWinningDeadline = game.nextMoveDeadline + game.MAX_BLOCKS_PER_MOVE;
     }
 
-    function _pushState(Game storage game, State memory state) private beforeDeadline(game) validNewState(game, state) {
+    function _pushState(Game storage game, StateLib.State memory state) private beforeDeadline(game) validNewState(game, state) {
         game.states.push(state);
         _updateDeadlines(game);
     }
@@ -174,7 +154,7 @@ library GameFunctions {
 
     function _claimWinning(
         Game storage game,
-        State memory state,
+        StateLib.State memory state,
         function (Game storage) returns (address) whoWins
     ) private {
         address winner = whoWins(game);
@@ -183,12 +163,12 @@ library GameFunctions {
         _reset(game, state.player);
     }
 
-    function _claimWinningBczNoResponse(Game storage game, State memory state) private noResponse(game, state.player) {
+    function _claimWinningBczNoResponse(Game storage game, StateLib.State memory state) private noResponse(game, state.player) {
         _announceWinning(game, state.player);
         _reset(game, state.player);
     }
 
-    function _start(Game storage game, State memory state, address _defender) private empty(game) {
+    function _start(Game storage game, StateLib.State memory state, address _defender) private empty(game) {
         require(game.MAX_STATES !=0 && game.MAX_BLOCKS_PER_MOVE != 0,
             "GuessWhat: configure your game first please");
 
@@ -209,7 +189,7 @@ library GameFunctions {
         game.MAX_STATES = maxStates;
     }
 
-    function start(Game storage game, State memory state, address _defender) internal {
+    function start(Game storage game, StateLib.State memory state, address _defender) internal {
         if (game.ABLE_TO_RESET_AFTER_ABANDONED && _lastGameAbandoned(game)) {
             _reset(game, state.player);
         }
@@ -218,7 +198,7 @@ library GameFunctions {
 
     function play(
         Game storage game,
-        State memory state,
+        StateLib.State memory state,
         function (Game storage) returns (address) whoWins
     ) internal notEmpty(game) {
         _pushState(game, state);
@@ -232,7 +212,7 @@ library GameFunctions {
 
     function claimWinning(
         Game storage game,
-        State memory state,
+        StateLib.State memory state,
         function (Game storage) returns (address) whoWins
     ) internal {
         state.verifySignature();
