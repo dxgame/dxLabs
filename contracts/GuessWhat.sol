@@ -86,6 +86,11 @@ library GameFunctions {
         require(_nextPlayer(game, lastState) == state.player, "GuessWhat: not for you now");
         require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
     }
+    
+    function _noResponse(Game storage game) private view returns (bool) {
+        return (block.number > game.nextMoveDeadline)
+            && (block.number <= game.noResponseSoClaimWinningDeadline);
+    }
 
     modifier empty(Game storage game) {
         require(_isEmpty(game), "GuessWhat: game already started");
@@ -147,15 +152,32 @@ library GameFunctions {
         game.noResponseSoClaimWinningDeadline = 0;
     }
 
+    function _claimWinning(
+        Game storage game,
+        State memory state,
+        function (State[]) pure returns (address) whoWins
+    ) private {
+        address winner = whoWins(game.states);
+        require(winner == state.player, "GuessWhat: you not winner");
+        _announceWinning(game, state.player);
+        _reset();
+    }
+
     function _claimWinningBczNoResponse(Game storage game, State memory state) private noResponse(game, state.player) {
         _announceWinning(game, state.player);
         _reset();
     }
 
-    function claimWinning(Game storage game) public {
-        // return _noResponse()
-        //     ? _claimWinningBczNoResponse()
-        //     : _claimWinning();
+    function claimWinning(
+        Game storage game,
+        State memory state,
+        function (State[]) pure returns (address) whoWins
+    ) public {
+        state.verifySignature();
+
+        return _noResponse(game)
+            ? _claimWinningBczNoResponse(game, state)
+            : _claimWinning(game, state, whoWins);
     }
 }
 
