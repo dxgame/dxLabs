@@ -6,7 +6,7 @@ const { N, prepare, tx, HashZero } = require("./utils");
 const StateLib = {
   getHash: (prevHash, signer, message) => {
     return ethers.utils.solidityKeccak256(
-      ["string", "address", "string"],
+      ["bytes32", "address", "string"],
       [prevHash, signer.address, message]
     );
   },
