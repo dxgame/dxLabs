@@ -20,10 +20,10 @@ const StateLib = {
 };
 
 describe("GuessWhat", function () {
-  let contract, owner, addr1, addr2, addr3;
+  let gameLib, contract, owner, addr1, addr2, addr3;
 
   beforeEach(async function () {
-    const [gameLib] = await prepare("GameLib");
+    [gameLib] = await prepare("GameLib");
     const libraries = { GameLib: gameLib.address };
     [contract, owner, addr1, addr2, addr3] = await prepare(
       "GuessWhat",
@@ -35,9 +35,6 @@ describe("GuessWhat", function () {
   it("Should update defender with a new challenge if there's no defender", async function () {
     expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
     expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
-
-    console.log("Owner: ", owner.address);
-    console.log("Addr1: ", addr1.address);
 
     await tx(
       contract
@@ -87,7 +84,9 @@ describe("GuessWhat", function () {
     expect(await contract.challenger()).to.equal(addr2.address);
 
     await expect(
-      contract.connect(addr3).challenge(HashZero)
+      contract
+        .connect(addr3)
+        .challenge(...(await StateLib.getParams({ signer: addr3 })))
     ).to.be.revertedWith("GuessWhat: move not allowed");
   });
 
@@ -110,14 +109,18 @@ describe("GuessWhat", function () {
     expect(await contract.challenger()).to.equal(addr2.address);
 
     const preBlock = await ethers.provider.getBlock("latest");
+    const prevHash = await contract.lastStateHash();
+    const game = await contract.game();
 
     await expect(
       contract
         .connect(addr1)
-        .defend(...(await StateLib.getParams({ signer: addr1 })))
+        .defend(...(await StateLib.getParams({ prevHash, signer: addr1 })))
     )
-      .to.emit(contract, "UpdateNextMoveEvent")
+      .to.emit(gameLib, "UpdateStateEvent")
       .withArgs(
+        game.id,
+        game.round,
         2,
         addr1.address,
         addr2.address,

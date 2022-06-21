@@ -42,15 +42,24 @@ library GameLib {
     }
 
     event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
-    event StartEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed defender);
+    event StartEvent(uint256 indexed id, uint256 round, address indexed challenger, address indexed defender);
     event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
+    event UpdateStateEvent(
+        uint256 indexed id,
+        uint256 round,
+        uint256 states,
+        address indexed player,
+        address indexed nextPlayer,
+        uint256 nextMoveDeadline,
+        uint256 noResponseSoClaimWinningDeadline
+    );
 
     function challenger(Game storage game) public view returns (address) {
         return game.players[0];
     }
 
     function defender(Game storage game) public view returns (address) {
-        return game.players[1];
+        return game.winner;
     }
 
     function _isEmpty(Game storage game) private view returns (bool) {
@@ -65,9 +74,9 @@ library GameLib {
         return _lastState(game).player;
     }
 
-    function _nextPlayer(Game storage game, StateLib.State storage state) private view returns (address) {
-        if (game.players[0] == state.player) return game.players[1];
-        if (game.players[1] == state.player) return game.players[0];
+    function _nextPlayer(Game storage game, address player) private view returns (address) {
+        if (game.players[0] == player) return game.players[1];
+        if (game.players[1] == player) return game.players[0];
         revert("GuessWhat: player not right");
     }
 
@@ -75,7 +84,7 @@ library GameLib {
         if (_isEmpty(game)) return;
     
         StateLib.State storage lastState = _lastState(game);
-        require(_nextPlayer(game, lastState) == state.player, "GuessWhat: not for you now");
+        require(_nextPlayer(game, lastState.player) == state.player, "GuessWhat: not for you now");
         require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
     }
     
@@ -136,6 +145,16 @@ library GameLib {
     function _pushState(Game storage game, StateLib.State memory state) private beforeDeadline(game) validNewState(game, state) {
         game.states.push(state);
         _updateDeadlines(game);
+
+        emit UpdateStateEvent(
+            game.id,
+            game.round,
+            game.states.length,
+            state.player,
+            _nextPlayer(game, state.player),
+            game.nextMoveDeadline,
+            game.noResponseSoClaimWinningDeadline
+        );
     }
 
     function _announceWinning(Game storage game, address winner) private {
@@ -175,6 +194,10 @@ library GameLib {
         _setPlayers(game, state.player, _defender);
         _pushState(game, state);
         emit StartEvent(game.id, game.round, state.player, _defender);
+    }
+
+    function lastStateHash(Game storage game) internal view returns (bytes32) {
+        return _lastState(game).getHash();
     }
 
     function config(

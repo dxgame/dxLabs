@@ -22,6 +22,7 @@ function strEqual(string memory a, string memory b) pure returns (bool) {
 
 contract GuessWhat is Ownable, ERC20 {
     using GameLib for GameLib.Game;
+    using StateLib for StateLib.State;
 
     GameLib.Game public game;
 
@@ -34,7 +35,7 @@ contract GuessWhat is Ownable, ERC20 {
 
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
-        game.winner = _msgSender();
+        // game.winner = _msgSender();
         game.config(true, 100, 4);
     }
 
@@ -44,6 +45,10 @@ contract GuessWhat is Ownable, ERC20 {
 
     function defender() public view returns (address) {
         return game.defender();
+    }
+
+    function lastStateHash() public view returns (bytes32) {
+        return game.lastStateHash();
     }
 
     function whoWins(GameLib.Game storage _game) internal view returns (address) {
@@ -60,8 +65,17 @@ contract GuessWhat is Ownable, ERC20 {
     function challenge(
         bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.ONE_ChallengeStarted) {
+        StateLib.State memory state = StateLib.State(prehash, player, encryptedRequest, v, r, s);
+
+        // No winner yet, claim winning directly
+        if (game.winner == address(0)) {
+            state.verifySignature();
+            game.winner = player;
+            return;
+        }
+
         game.start(
-            StateLib.State(prehash, player, encryptedRequest, v, r, s),
+            state,
             game.winner
         );
     }
