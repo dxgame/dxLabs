@@ -5,6 +5,7 @@ const { tx, x, HashZero, nobody } = require("./common");
 const wrong = {
   you: "GuessWhat: not for you now",
   move: "GuessWhat: move not allowed",
+  notWinner: "GuessWhat: you not winner",
 };
 
 const msg = {

@@ -113,4 +113,26 @@ describe("GuessWhat", function () {
     await claimWinning(contract, challenger);
     await expectPlayers(contract, challenger, nobody);
   });
+
+  it("Should not be able to claim winning if defender loses", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`0`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "0");
+
+    await expectWinner(contract, challenger);
+    await moveNotAllowed(contract, defender, "claimWinning", wrong.notWinner);
+  });
+
+  it("Should not be able to claim winning if you are bystander", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`0`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "0");
+
+    await expectWinner(contract, challenger);
+    await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
+  });
 });
