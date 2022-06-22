@@ -1,6 +1,6 @@
+const prepare = require("./utils/prepare");
 const {
   N,
-  prepare,
   wrong,
   nobody,
   init,
@@ -9,7 +9,7 @@ const {
   moveNotAllowed,
   challenge,
   defend,
-} = require("./utils");
+} = require("./utils/guesswhat");
 
 describe("GuessWhat", function () {
   // eslint-disable-next-line no-unused-vars

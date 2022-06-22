@@ -1,5 +1,6 @@
 const { expect } = require("chai");
-const { N, prepare } = require("./utils");
+const prepare = require("./utils/prepare");
+const { N } = require("./utils/common");
 
 describe("SimpleToken", function () {
   let contract, addr1;

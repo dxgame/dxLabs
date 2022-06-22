@@ -12,6 +12,7 @@
     "editor.detectIndentation": true,
     "cSpell.words": [
         "arrayify",
+        "guesswhat",
         "Keccak"
     ]
 }

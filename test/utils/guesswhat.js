@@ -1,37 +1,11 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { N, tx, HashZero, nobody } = require("./common");
 
-const N = (n) => ethers.utils.parseEther(n.toString());
 const wrong = {
   you: "GuessWhat: not for you now",
   move: "GuessWhat: move not allowed",
 };
-
-const prepareLibs = async function (libraries) {
-  if (typeof libraries === "string") {
-    const [library] = await prepare(libraries);
-    return { [libraries]: library.address };
-  }
-  return libraries;
-};
-
-const prepare = async function (contractName, libraries, ...args) {
-  libraries = await prepareLibs(libraries);
-
-  const signers = await ethers.getSigners();
-  const Contract = await ethers.getContractFactory(contractName, { libraries });
-  const contract = await Contract.deploy(...args);
-
-  await contract.deployed();
-  return [contract, ...signers];
-};
-
-const tx = async function (_tx) {
-  return (await _tx).wait();
-};
-
-const { HashZero, AddressZero } = ethers.constants;
-const nobody = { address: AddressZero };
 
 const StateLib = {
   getHash: (prevHash, signer, message) => {
@@ -71,8 +45,8 @@ async function expectPlayers(contract, defender, challenger) {
 }
 
 async function expectNoPlayers(contract) {
-  expect(await contract.defender()).to.equal(AddressZero);
-  expect(await contract.challenger()).to.equal(AddressZero);
+  expect(await contract.defender()).to.equal(nobody.address);
+  expect(await contract.challenger()).to.equal(nobody.address);
 }
 
 async function move(contract, player, action, args) {
@@ -109,7 +83,6 @@ async function defend(contract, defender, challenger) {
 module.exports = {
   N,
   wrong,
-  prepare,
   tx,
   StateLib,
 
