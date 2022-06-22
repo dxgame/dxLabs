@@ -76,10 +76,10 @@ describe("GuessWhat", function () {
 
   it("Should be able to claim winning if defender wins", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
-    await defend(contract, defender);
-    await revealChallenge(contract, challenger);
-    await revealDefend(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`1`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "1");
 
     await expectWinner(contract, defender);
     await claimWinning(contract, defender);
@@ -88,18 +88,13 @@ describe("GuessWhat", function () {
 
   it("Should not be able to claim winning if challenger loses", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
-    await defend(contract, defender);
-    await revealChallenge(contract, challenger);
-    await revealDefend(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`1`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "1");
 
     await expectWinner(contract, defender);
-    await moveNotAllowed(
-      contract,
-      challenger,
-      "claimWinning",
-      "GuessWhat: you not winner"
-    );
+    await moveNotAllowed(contract, challenger, "claimWinning", wrong.notWinner);
   });
 
   it("Should be able to claim winning if challenger wins", async function () {
@@ -125,7 +120,7 @@ describe("GuessWhat", function () {
     await moveNotAllowed(contract, defender, "claimWinning", wrong.notWinner);
   });
 
-  it("Should not be able to claim winning if you are bystander", async function () {
+  it("Should not be able to claim winning if you are bystander if challenger wins", async function () {
     await init(contract, defender);
     await challenge(contract, challenger, x`1`);
     await defend(contract, defender, x`0`);
@@ -133,6 +128,17 @@ describe("GuessWhat", function () {
     await revealDefend(contract, defender, "0");
 
     await expectWinner(contract, challenger);
+    await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
+  });
+
+  it("Should not be able to claim winning if you are bystander if defender wins", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`1`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "1");
+
+    await expectWinner(contract, defender);
     await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
   });
 });
