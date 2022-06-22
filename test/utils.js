@@ -77,8 +77,6 @@ async function challenge(contract, challenger, defender) {
       .connect(challenger)
       .challenge(...(await StateLib.getParams({ signer: challenger })))
   );
-
-  await expectPlayers(contract, defender, challenger);
 }
 
 async function defend(contract, defender, challenger) {

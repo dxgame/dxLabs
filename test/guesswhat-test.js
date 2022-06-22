@@ -32,22 +32,9 @@ describe("GuessWhat", function () {
   });
 
   it("Should update challenger with a new challenge if there is defender", async function () {
-    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
-
-    await tx(
-      contract
-        .connect(defender)
-        .challenge(...(await StateLib.getParams({ signer: defender })))
-    );
-    await tx(
-      contract
-        .connect(challenger)
-        .challenge(...(await StateLib.getParams({ signer: challenger })))
-    );
-
-    expect(await contract.defender()).to.equal(defender.address);
-    expect(await contract.challenger()).to.equal(challenger.address);
+    await init(contract, defender);
+    await challenge(contract, challenger, defender);
+    await expectPlayers(contract, defender, challenger);
   });
 
   it("Should not allowed to challenge with a challenge in effect", async function () {
