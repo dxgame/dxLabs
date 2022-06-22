@@ -4,8 +4,8 @@
   "description": "Go Game on Block Chain",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test",
-    "xlog": "npx hardhat remove-logs"
+    "test": "NODE_OPTIONS=--openssl-legacy-provider npx hardhat test",
+    "xlog": "NODE_OPTIONS=--openssl-legacy-provider npx hardhat remove-logs"
   },
   "repository": {
     "type": "git",
