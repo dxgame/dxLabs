@@ -15,11 +15,11 @@ const StateLib = {
     );
   },
 
-  getParams: async function ({ prevHash = HashZero, signer, message = "" }) {
-    const stateHash = StateLib.getHash(prevHash, signer, message);
-    const flatSig = await signer.signMessage(ethers.utils.arrayify(stateHash));
+  getParams: async function ({ prevHash = HashZero, player, message = "" }) {
+    const stateHash = StateLib.getHash(prevHash, player, message);
+    const flatSig = await player.signMessage(ethers.utils.arrayify(stateHash));
     const sig = ethers.utils.splitSignature(flatSig);
-    return [prevHash, signer.address, message, sig.v, sig.r, sig.s];
+    return [prevHash, player.address, message, sig.v, sig.r, sig.s];
   },
 };
 
@@ -49,10 +49,11 @@ async function expectNoPlayers(contract) {
   expect(await contract.challenger()).to.equal(nobody.address);
 }
 
-async function move(contract, player, action, args) {
-  return contract
-    .connect(player)
-    [action](...(await StateLib.getParams({ signer: player, ...args })));
+async function move(contract, player, action, args = {}) {
+  const prevHash = args.prevHash || (await contract.lastStateHash());
+  const params = await StateLib.getParams({ player, prevHash, ...args });
+
+  return contract.connect(player)[action](...params);
 }
 
 async function init(contract, defender) {
@@ -80,6 +81,10 @@ async function defend(contract, defender, challenger) {
     );
 }
 
+async function revealChallenge(contract, challenger) {
+  await tx(move(contract, challenger, "revealChallenge"));
+}
+
 module.exports = {
   wrong,
   StateLib,
@@ -91,4 +96,5 @@ module.exports = {
   moveNotAllowed,
   challenge,
   defend,
+  revealChallenge,
 };

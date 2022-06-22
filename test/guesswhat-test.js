@@ -2,12 +2,14 @@ const prepare = require("./utils/prepare");
 const { N, nobody } = require("./utils/common");
 const {
   wrong,
-  init,
   expectPlayers,
   expectNoPlayers,
   moveNotAllowed,
+
+  init,
   challenge,
   defend,
+  revealChallenge,
 } = require("./utils/guesswhat");
 
 describe("GuessWhat", function () {
@@ -58,7 +60,7 @@ describe("GuessWhat", function () {
     await init(contract, defender);
     await challenge(contract, challenger);
     await defend(contract, defender, challenger);
+    // TODO: reveal challenge
+    await revealChallenge(contract, challenger);
   });
-
-  // TODO: reveal challenge
 });

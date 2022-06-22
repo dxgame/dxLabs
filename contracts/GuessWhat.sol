@@ -104,7 +104,7 @@ contract GuessWhat is Ownable, ERC20 {
         );
     }
 
-    function challengerReveal(
+    function revealChallenge(
         bytes32 prehash, address player, string memory revealedRequest, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
         require(
@@ -118,7 +118,7 @@ contract GuessWhat is Ownable, ERC20 {
         );
     }
 
-    function defenderReveal(
+    function revealDefend(
         bytes32 prehash, address player, string memory revealedResponse, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.FOUR_DefenderRevealed) {
         require(

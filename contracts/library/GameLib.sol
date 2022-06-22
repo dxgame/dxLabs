@@ -197,7 +197,10 @@ library GameLib {
     }
 
     function lastStateHash(Game storage game) internal view returns (bytes32) {
-        return _lastState(game).getHash();
+        if (!_isEmpty(game)) {
+            return _lastState(game).getHash();
+        }
+        return blockhash(block.number - 1);
     }
 
     function config(
