@@ -6,6 +6,8 @@ const {
   prepare,
   tx,
   StateLib,
+  nobody,
+  expectPlayers,
   init,
   challenge,
   defend,
@@ -25,17 +27,8 @@ describe("GuessWhat", function () {
   });
 
   it("Should update defender with a new challenge if there's no defender", async function () {
-    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
-
-    await tx(
-      contract
-        .connect(defender)
-        .challenge(...(await StateLib.getParams({ signer: defender })))
-    );
-
-    expect(await contract.defender()).to.equal(defender.address);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
+    await init(contract, defender);
+    await expectPlayers(contract, defender, nobody);
   });
 
   it("Should update challenger with a new challenge if there is defender", async function () {

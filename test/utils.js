@@ -16,7 +16,8 @@ const tx = async function (_tx) {
   return (await _tx).wait();
 };
 
-const HashZero = ethers.constants.HashZero;
+const { HashZero, AddressZero } = ethers.constants;
+const nobody = { address: AddressZero };
 
 const StateLib = {
   getHash: (prevHash, signer, message) => {
@@ -50,9 +51,18 @@ async function getUpdateStateEventArgs(contract, player, nextPlayer, step) {
   ];
 }
 
+async function expectPlayers(contract, defender, challenger) {
+  expect(await contract.defender()).to.equal(defender.address);
+  expect(await contract.challenger()).to.equal(challenger.address);
+}
+
+async function expectNoPlayers(contract) {
+  expect(await contract.defender()).to.equal(AddressZero);
+  expect(await contract.challenger()).to.equal(AddressZero);
+}
+
 async function init(contract, defender) {
-  expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-  expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
+  await expectNoPlayers(contract);
 
   await tx(
     contract
@@ -68,8 +78,7 @@ async function challenge(contract, challenger, defender) {
       .challenge(...(await StateLib.getParams({ signer: challenger })))
   );
 
-  expect(await contract.defender()).to.equal(defender.address);
-  expect(await contract.challenger()).to.equal(challenger.address);
+  await expectPlayers(contract, defender, challenger);
 }
 
 async function defend(contract, defender, challenger) {
@@ -92,6 +101,10 @@ module.exports = {
   prepare,
   tx,
   StateLib,
+
+  nobody,
+  expectPlayers,
+  expectNoPlayers,
 
   init,
   challenge,
