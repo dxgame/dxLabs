@@ -1,3 +1,4 @@
+const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 const N = (n) => ethers.utils.parseEther(n.toString());
@@ -49,6 +50,25 @@ async function getUpdateStateEventArgs(contract, player, nextPlayer, step) {
   ];
 }
 
+async function challenge(contract, challenger, defender) {
+  expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
+  expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
+
+  await tx(
+    contract
+      .connect(defender)
+      .challenge(...(await StateLib.getParams({ signer: defender })))
+  );
+  await tx(
+    contract
+      .connect(challenger)
+      .challenge(...(await StateLib.getParams({ signer: challenger })))
+  );
+
+  expect(await contract.defender()).to.equal(defender.address);
+  expect(await contract.challenger()).to.equal(challenger.address);
+}
+
 module.exports = {
   N,
   prepare,
@@ -56,4 +76,5 @@ module.exports = {
   HashZero,
   StateLib,
   getUpdateStateEventArgs,
+  challenge,
 };

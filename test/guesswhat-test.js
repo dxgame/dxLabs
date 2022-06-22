@@ -7,6 +7,7 @@ const {
   tx,
   StateLib,
   getUpdateStateEventArgs,
+  challenge,
 } = require("./utils");
 
 describe("GuessWhat", function () {
@@ -154,22 +155,7 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to reveal challenge with defend in effect", async function () {
-    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
-
-    await tx(
-      contract
-        .connect(addr1)
-        .challenge(...(await StateLib.getParams({ signer: addr1 })))
-    );
-    await tx(
-      contract
-        .connect(addr2)
-        .challenge(...(await StateLib.getParams({ signer: addr2 })))
-    );
-
-    expect(await contract.defender()).to.equal(addr1.address);
-    expect(await contract.challenger()).to.equal(addr2.address);
+    await challenge(contract, addr2, addr1);
 
     await expect(
       contract.connect(addr1).defend(
