@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { N, tx, HashZero, nobody } = require("./common");
+const { tx, HashZero, nobody } = require("./common");
 
 const wrong = {
   you: "GuessWhat: not for you now",
