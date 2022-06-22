@@ -70,11 +70,7 @@ async function challenge(contract, challenger) {
 }
 
 async function defend(contract, defender, challenger) {
-  await expect(
-    move(contract, defender, "defend", {
-      prevHash: await contract.lastStateHash(),
-    })
-  )
+  await expect(move(contract, defender, "defend"))
     .to.emit(contract, "UpdateStateEvent")
     .withArgs(
       ...(await getUpdateStateEventArgs(contract, defender, challenger, 2))
