@@ -81,12 +81,8 @@ async function defend(contract, defender, challenger) {
 }
 
 module.exports = {
-  N,
   wrong,
-  tx,
   StateLib,
-
-  nobody,
   expectPlayers,
   expectNoPlayers,
 

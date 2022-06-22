@@ -1,8 +1,7 @@
 const prepare = require("./utils/prepare");
+const { N, nobody } = require("./utils/common");
 const {
-  N,
   wrong,
-  nobody,
   init,
   expectPlayers,
   expectNoPlayers,
