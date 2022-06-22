@@ -82,4 +82,18 @@ describe("GuessWhat", function () {
     await claimWinning(contract, defender);
     await expectPlayers(contract, defender, nobody);
   });
+
+  it("Should not be able to claim winning if lose the game", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger);
+    await defend(contract, defender);
+    await revealChallenge(contract, challenger);
+    await revealDefend(contract, defender);
+    await moveNotAllowed(
+      contract,
+      challenger,
+      "claimWinning",
+      "GuessWhat: you not winner"
+    );
+  });
 });

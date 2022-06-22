@@ -21,8 +21,23 @@ function strEqual(string memory a, string memory b) pure returns (bool) {
     return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
 }
 
+library GuessWhatLib {
+    using GameLib for GameLib.Game;
+
+    function whoWins(GameLib.Game storage game) internal view returns (address) {
+        if (game.states.length != game.MAX_STATES) {
+            return address(0);
+        }
+
+        string memory revealedRequest = game.states[2].message;
+        string memory revealedResponse = game.states[3].message;
+        return isOne(revealedResponse) == isOne(revealedRequest) ? game.defender() : game.challenger();
+    }
+}
+
 contract GuessWhat is Ownable, ERC20 {
     using GameLib for GameLib.Game;
+    using GuessWhatLib for GameLib.Game;
     using StateLib for StateLib.State;
 
     GameLib.Game public game;
@@ -74,10 +89,8 @@ contract GuessWhat is Ownable, ERC20 {
         return game.lastStateHash();
     }
 
-    function whoWins(GameLib.Game storage _game) internal view returns (address) {
-        string memory revealedRequest = _game.states[2].message;
-        string memory revealedResponse = _game.states[3].message;
-        return isOne(revealedResponse) == isOne(revealedRequest) ? _game.defender() : _game.challenger();
+    function whoWins() public view returns (address) {
+        return game.whoWins();
     }
 
     modifier nextMoveIs(Step move) {
@@ -108,7 +121,7 @@ contract GuessWhat is Ownable, ERC20 {
     ) external nextMoveIs(Step.TWO_DefenderDefended) {
         game.play(
             StateLib.State(prehash, player, encryptedResponse, v, r, s),
-            whoWins
+            GuessWhatLib.whoWins
         );
     }
 
@@ -122,7 +135,7 @@ contract GuessWhat is Ownable, ERC20 {
 
         game.play(
             StateLib.State(prehash, player, revealedRequest, v, r, s),
-            whoWins
+            GuessWhatLib.whoWins
         );
     }
 
@@ -136,7 +149,7 @@ contract GuessWhat is Ownable, ERC20 {
 
         game.play(
             StateLib.State(prehash, player, revealedResponse, v, r, s),
-            whoWins
+            GuessWhatLib.whoWins
         );
     }
 
@@ -145,7 +158,7 @@ contract GuessWhat is Ownable, ERC20 {
     ) external {
         game.claimWinning(
             StateLib.State(prehash, player, message, v, r, s),
-            whoWins
+            GuessWhatLib.whoWins
         );
     }
 }

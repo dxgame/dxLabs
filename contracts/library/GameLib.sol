@@ -253,7 +253,7 @@ library GameLib {
         function (Game storage) returns (address) whoWins
     ) internal {
         state.verifySignature();
-        // require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
+        require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
 
         return _noResponse(game)
             ? _claimWinningBczNoResponse(game, state)
