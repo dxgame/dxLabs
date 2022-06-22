@@ -50,7 +50,7 @@ async function getUpdateStateEventArgs(contract, player, nextPlayer, step) {
   ];
 }
 
-async function challenge(contract, challenger, defender) {
+async function init(contract, defender) {
   expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
   expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
 
@@ -59,6 +59,9 @@ async function challenge(contract, challenger, defender) {
       .connect(defender)
       .challenge(...(await StateLib.getParams({ signer: defender })))
   );
+}
+
+async function challenge(contract, challenger, defender) {
   await tx(
     contract
       .connect(challenger)
@@ -69,12 +72,28 @@ async function challenge(contract, challenger, defender) {
   expect(await contract.challenger()).to.equal(challenger.address);
 }
 
+async function defend(contract, defender, challenger) {
+  await expect(
+    contract.connect(defender).defend(
+      ...(await StateLib.getParams({
+        prevHash: await contract.lastStateHash(),
+        signer: defender,
+      }))
+    )
+  )
+    .to.emit(contract, "UpdateStateEvent")
+    .withArgs(
+      ...(await getUpdateStateEventArgs(contract, defender, challenger, 2))
+    );
+}
+
 module.exports = {
   N,
   prepare,
   tx,
-  HashZero,
   StateLib,
-  getUpdateStateEventArgs,
+
+  init,
   challenge,
+  defend,
 };
