@@ -60,7 +60,6 @@ describe("GuessWhat", function () {
     await init(contract, defender);
     await challenge(contract, challenger);
     await defend(contract, defender, challenger);
-    // TODO: reveal challenge
     await revealChallenge(contract, challenger);
   });
 });

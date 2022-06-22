@@ -77,17 +77,25 @@ library GameLib {
     function _nextPlayer(Game storage game, address player) private view returns (address) {
         if (game.players[0] == player) return game.players[1];
         if (game.players[1] == player) return game.players[0];
-        revert("GuessWhat: player not right");
+        return address(0);
+    }
+
+    function nextPlayer(Game storage game) internal view returns (address) {
+        address player = _lastPlayer(game);
+        return _nextPlayer(game, player);
+    }
+
+    function opponent(Game storage game, address player) internal view returns (address) {
+        return _nextPlayer(game, player);
     }
 
     function _verifyChain(Game storage game, StateLib.State memory state) private view {
         if (_isEmpty(game)) return;
-    
-        StateLib.State storage lastState = _lastState(game);
-        require(_nextPlayer(game, lastState.player) == state.player, "GuessWhat: not for you now");
-        require(lastState.getHash() == state.prevHash, "GuessWhat: hash not right");
+
+        require(nextPlayer(game) == state.player, "GuessWhat: not for you now");
+        require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
     }
-    
+
     function _noResponse(Game storage game) private view returns (bool) {
         return (block.number > game.nextMoveDeadline)
             && (block.number <= game.noResponseSoClaimWinningDeadline);

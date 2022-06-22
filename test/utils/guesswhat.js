@@ -23,17 +23,18 @@ const StateLib = {
   },
 };
 
-async function getUpdateStateEventArgs(contract, player, nextPlayer, step) {
+async function getUpdateStateEventArgs(contract, player, step) {
   const preBlock = await ethers.provider.getBlock("latest");
   const game = await contract.game();
   const MAX_BLOCKS_PER_MOVE = game.MAX_BLOCKS_PER_MOVE.toNumber();
+  const otherPlayer = await contract.opponent(player.address);
 
   return [
     game.id,
     game.round,
     step,
     player.address,
-    nextPlayer.address,
+    otherPlayer,
     preBlock.number + 1 + MAX_BLOCKS_PER_MOVE,
     preBlock.number + 1 + MAX_BLOCKS_PER_MOVE * 2,
   ];
@@ -65,24 +66,20 @@ function moveNotAllowed(contract, player, action, error = wrong.move) {
   return expect(move(contract, player, action)).to.be.revertedWith(error);
 }
 
-async function challenge(contract, challenger) {
-  await tx(
-    move(contract, challenger, "challenge", { message: hashHex("GuessWhat") })
-  );
+async function challenge(contract, challenger, message = hashHex("GuessWhat")) {
+  await tx(move(contract, challenger, "challenge", { message }));
 }
 
 async function defend(contract, defender, challenger) {
   await expect(move(contract, defender, "defend"))
     .to.emit(contract, "UpdateStateEvent")
-    .withArgs(
-      ...(await getUpdateStateEventArgs(contract, defender, challenger, 2))
-    );
+    .withArgs(...(await getUpdateStateEventArgs(contract, defender, 2)));
 }
 
-async function revealChallenge(contract, challenger) {
-  await tx(
-    move(contract, challenger, "revealChallenge", { message: "GuessWhat" })
-  );
+async function revealChallenge(contract, challenger, message = "GuessWhat") {
+  await expect(move(contract, challenger, "revealChallenge", { message }))
+    .to.emit(contract, "UpdateStateEvent")
+    .withArgs(...(await getUpdateStateEventArgs(contract, challenger, 3)));
 }
 
 module.exports = {

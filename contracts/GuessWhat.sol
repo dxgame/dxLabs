@@ -62,6 +62,14 @@ contract GuessWhat is Ownable, ERC20 {
         return game.defender();
     }
 
+    function nextPlayer() public view returns (address) {
+        return game.nextPlayer();
+    }
+
+    function opponent(address player) public view returns (address) {
+        return game.opponent(player);
+    }
+
     function lastStateHash() public view returns (bytes32) {
         return game.lastStateHash();
     }
