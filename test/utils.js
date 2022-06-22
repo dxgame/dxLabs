@@ -78,7 +78,7 @@ function moveNotAllowed(contract, player, action) {
   );
 }
 
-async function challenge(contract, challenger, defender) {
+async function challenge(contract, challenger) {
   await tx(move(contract, challenger, "challenge"));
 }
 

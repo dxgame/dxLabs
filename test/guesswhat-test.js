@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
 
 const {
   N,
@@ -7,9 +6,9 @@ const {
   tx,
   StateLib,
   nobody,
-  expectPlayers,
   init,
-  move,
+  expectPlayers,
+  expectNoPlayers,
   moveNotAllowed,
   challenge,
   defend,
@@ -33,49 +32,32 @@ describe("GuessWhat", function () {
 
   it("Should update challenger with a new challenge if there is defender", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, defender);
+    await challenge(contract, challenger);
     await expectPlayers(contract, defender, challenger);
   });
 
   it("Should not allowed to challenge with a challenge in effect", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, defender);
+    await challenge(contract, challenger);
     await expectPlayers(contract, defender, challenger);
     await moveNotAllowed(contract, bystander, "challenge");
   });
 
   it("Should be able to defend with a challenge in effect", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, defender);
+    await challenge(contract, challenger);
     await defend(contract, defender, challenger);
   });
 
   it("Should not be able to defend without a challenge in effect", async function () {
-    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
+    await expectNoPlayers(contract);
+    await moveNotAllowed(contract, defender, "defend");
 
-    await expect(
-      contract
-        .connect(defender)
-        .defend(...(await StateLib.getParams({ signer: defender })))
-    ).to.be.revertedWith("GuessWhat: move not allowed");
+    await init(contract, defender);
+    await moveNotAllowed(contract, defender, "defend");
 
-    await tx(
-      contract
-        .connect(defender)
-        .challenge(...(await StateLib.getParams({ signer: defender })))
-    );
-    await expect(
-      contract
-        .connect(defender)
-        .defend(...(await StateLib.getParams({ signer: defender })))
-    ).to.be.revertedWith("GuessWhat: move not allowed");
+    await challenge(contract, challenger);
 
-    await tx(
-      contract
-        .connect(challenger)
-        .challenge(...(await StateLib.getParams({ signer: challenger })))
-    );
     await expect(
       contract
         .connect(bystander)
@@ -85,7 +67,7 @@ describe("GuessWhat", function () {
 
   it("Should be able to reveal challenge with defend in effect", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, defender);
+    await challenge(contract, challenger);
     await defend(contract, defender, challenger);
   });
 
