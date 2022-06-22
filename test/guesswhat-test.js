@@ -1,23 +1,13 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-const { N, prepare, tx, HashZero } = require("./utils");
-
-const StateLib = {
-  getHash: (prevHash, signer, message) => {
-    return ethers.utils.solidityKeccak256(
-      ["bytes32", "address", "string"],
-      [prevHash, signer.address, message]
-    );
-  },
-
-  getParams: async function ({ prevHash = HashZero, signer, message = "" }) {
-    const stateHash = StateLib.getHash(prevHash, signer, message);
-    const flatSig = await signer.signMessage(ethers.utils.arrayify(stateHash));
-    const sig = ethers.utils.splitSignature(flatSig);
-    return [prevHash, signer.address, message, sig.v, sig.r, sig.s];
-  },
-};
+const {
+  N,
+  prepare,
+  tx,
+  StateLib,
+  getUpdateStateEventArgs,
+} = require("./utils");
 
 describe("GuessWhat", function () {
   let gameLib, contract, addr1, addr2, addr3;
@@ -162,4 +152,36 @@ describe("GuessWhat", function () {
         .defend(...(await StateLib.getParams({ signer: addr3 })))
     ).to.be.revertedWith("GuessWhat: not for you now");
   });
+
+  it("Should be able to reveal challenge with defend in effect", async function () {
+    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
+    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
+
+    await tx(
+      contract
+        .connect(addr1)
+        .challenge(...(await StateLib.getParams({ signer: addr1 })))
+    );
+    await tx(
+      contract
+        .connect(addr2)
+        .challenge(...(await StateLib.getParams({ signer: addr2 })))
+    );
+
+    expect(await contract.defender()).to.equal(addr1.address);
+    expect(await contract.challenger()).to.equal(addr2.address);
+
+    await expect(
+      contract.connect(addr1).defend(
+        ...(await StateLib.getParams({
+          prevHash: await contract.lastStateHash(),
+          signer: addr1,
+        }))
+      )
+    )
+      .to.emit(contract, "UpdateStateEvent")
+      .withArgs(...(await getUpdateStateEventArgs(contract, addr1, addr2, 2)));
+  });
+
+  // TODO: reveal challenge
 });
