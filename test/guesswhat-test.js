@@ -13,12 +13,10 @@ const {
 
 describe("GuessWhat", function () {
   // eslint-disable-next-line no-unused-vars
-  let gameLib, contract, deployer, defender, challenger, bystander;
+  let contract, deployer, defender, challenger, bystander;
 
   beforeEach(async function () {
-    [gameLib] = await prepare("GameLib");
-    const libraries = { GameLib: gameLib.address };
-    const preparation = await prepare("GuessWhat", libraries, N`10`);
+    const preparation = await prepare("GuessWhat", "GameLib", N`10`);
     [contract, deployer, defender, challenger, bystander] = preparation;
   });
 
