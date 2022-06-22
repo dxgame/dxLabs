@@ -14,6 +14,7 @@ const {
 } = require("./utils");
 
 describe("GuessWhat", function () {
+  // eslint-disable-next-line no-unused-vars
   let gameLib, contract, deployer, defender, challenger, bystander;
 
   beforeEach(async function () {

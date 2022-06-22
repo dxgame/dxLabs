@@ -19,7 +19,7 @@
 
 TODO [A design of PoE (Proof of Excellence) token #7 - Introduce True Unpredictability](...)
 
-## use github/codespaces, save your time
+## build with github/codespaces, save your time
 
 Try running some of the following tasks:
 
