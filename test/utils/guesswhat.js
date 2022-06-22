@@ -107,6 +107,13 @@ async function revealDefend(contract, defender, message = msg.defend) {
     .withArgs(...(await getUpdateStateEventArgs(contract, defender, 4)));
 }
 
+async function claimWinning(contract, winner) {
+  await expect(move(contract, winner, "claimWinning")).to.emit(
+    contract,
+    "WinningEvent"
+  );
+}
+
 module.exports = {
   wrong,
   StateLib,
@@ -120,4 +127,5 @@ module.exports = {
   defend,
   revealChallenge,
   revealDefend,
+  claimWinning,
 };

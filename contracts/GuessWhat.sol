@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "./library/StateLib.sol";
 import "./library/GameLib.sol";
+import "hardhat/console.sol";
 
 function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
@@ -50,8 +51,7 @@ contract GuessWhat is Ownable, ERC20 {
 
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
-        // game.winner = _msgSender();
-        game.config(true, 100, 4);
+        game.config(true, false, 4, 100);
     }
 
     function challenger() public view returns (address) {

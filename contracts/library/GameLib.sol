@@ -29,10 +29,11 @@ library GameLib {
         uint256 id;
         uint256 round;
 
-        bool ABLE_TO_RESET_AFTER_ABANDONED;
-        uint256 MAX_BLOCKS_PER_MOVE;
+        bool RESTART_ABANDONED;
+        bool AUTO_WIN_AT_LAST_MOVE;
         uint256 MAX_STATES;
-
+        uint256 MAX_BLOCKS_PER_MOVE;
+ 
         address winner;
         address[2] players;
         StateLib.State[] states;
@@ -213,17 +214,19 @@ library GameLib {
 
     function config(
         Game storage game,
-        bool ableToResetAfterAbandoned,
-        uint256 maxBlocksPerMove,
-        uint256 maxStates
+        bool restartAbandoned,
+        bool autoWinAtLastMove,
+        uint256 maxStates,
+        uint256 maxBlocksPerMove
     ) internal {
-        game.ABLE_TO_RESET_AFTER_ABANDONED = ableToResetAfterAbandoned;
-        game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
+        game.RESTART_ABANDONED = restartAbandoned;
+        game.AUTO_WIN_AT_LAST_MOVE = autoWinAtLastMove;
         game.MAX_STATES = maxStates;
+        game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
     }
 
     function start(Game storage game, StateLib.State memory state, address _defender) internal {
-        if (game.ABLE_TO_RESET_AFTER_ABANDONED && _lastGameAbandoned(game)) {
+        if (game.RESTART_ABANDONED && _lastGameAbandoned(game)) {
             _reset(game, state.player);
         }
         _start(game, state, _defender);
@@ -236,7 +239,8 @@ library GameLib {
     ) internal notEmpty(game) {
         _pushState(game, state);
 
-        if (game.states.length == game.MAX_STATES
+        if (game.AUTO_WIN_AT_LAST_MOVE
+            && game.states.length == game.MAX_STATES
             && whoWins(game) == state.player
         ) {
             _claimWinning(game, state, whoWins);
@@ -249,6 +253,7 @@ library GameLib {
         function (Game storage) returns (address) whoWins
     ) internal {
         state.verifySignature();
+        // require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
 
         return _noResponse(game)
             ? _claimWinningBczNoResponse(game, state)

@@ -11,6 +11,7 @@ const {
   defend,
   revealChallenge,
   revealDefend,
+  claimWinning,
 } = require("./utils/guesswhat");
 
 describe("GuessWhat", function () {
@@ -70,5 +71,14 @@ describe("GuessWhat", function () {
     await defend(contract, defender);
     await revealChallenge(contract, challenger);
     await revealDefend(contract, defender);
+  });
+
+  it("Should be able to claim winning with revealed defend", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger);
+    await defend(contract, defender);
+    await revealChallenge(contract, challenger);
+    await revealDefend(contract, defender);
+    await claimWinning(contract, defender);
   });
 });
