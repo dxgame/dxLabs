@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { tx, HashZero, nobody } = require("./common");
+const { tx, hashHex, HashZero, nobody } = require("./common");
 
 const wrong = {
   you: "GuessWhat: not for you now",
@@ -66,7 +66,9 @@ function moveNotAllowed(contract, player, action, error = wrong.move) {
 }
 
 async function challenge(contract, challenger) {
-  await tx(move(contract, challenger, "challenge"));
+  await tx(
+    move(contract, challenger, "challenge", { message: hashHex("GuessWhat") })
+  );
 }
 
 async function defend(contract, defender, challenger) {
@@ -78,7 +80,9 @@ async function defend(contract, defender, challenger) {
 }
 
 async function revealChallenge(contract, challenger) {
-  await tx(move(contract, challenger, "revealChallenge"));
+  await tx(
+    move(contract, challenger, "revealChallenge", { message: "GuessWhat" })
+  );
 }
 
 module.exports = {
