@@ -38,22 +38,9 @@ describe("GuessWhat", function () {
   });
 
   it("Should not allowed to challenge with a challenge in effect", async function () {
-    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
-
-    await tx(
-      contract
-        .connect(defender)
-        .challenge(...(await StateLib.getParams({ signer: defender })))
-    );
-    await tx(
-      contract
-        .connect(challenger)
-        .challenge(...(await StateLib.getParams({ signer: challenger })))
-    );
-
-    expect(await contract.defender()).to.equal(defender.address);
-    expect(await contract.challenger()).to.equal(challenger.address);
+    await init(contract, defender);
+    await challenge(contract, challenger, defender);
+    await expectPlayers(contract, defender, challenger);
 
     await expect(
       contract
@@ -63,43 +50,9 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to defend with a challenge in effect", async function () {
-    expect(await contract.defender()).to.equal(ethers.constants.AddressZero);
-    expect(await contract.challenger()).to.equal(ethers.constants.AddressZero);
-
-    await tx(
-      contract
-        .connect(defender)
-        .challenge(...(await StateLib.getParams({ signer: defender })))
-    );
-    await tx(
-      contract
-        .connect(challenger)
-        .challenge(...(await StateLib.getParams({ signer: challenger })))
-    );
-
-    expect(await contract.defender()).to.equal(defender.address);
-    expect(await contract.challenger()).to.equal(challenger.address);
-
-    const preBlock = await ethers.provider.getBlock("latest");
-    const prevHash = await contract.lastStateHash();
-    const game = await contract.game();
-    const MAX_BLOCKS_PER_MOVE = game.MAX_BLOCKS_PER_MOVE.toNumber();
-
-    await expect(
-      contract
-        .connect(defender)
-        .defend(...(await StateLib.getParams({ prevHash, signer: defender })))
-    )
-      .to.emit(contract, "UpdateStateEvent")
-      .withArgs(
-        game.id,
-        game.round,
-        2,
-        defender.address,
-        challenger.address,
-        preBlock.number + 1 + MAX_BLOCKS_PER_MOVE,
-        preBlock.number + 1 + MAX_BLOCKS_PER_MOVE * 2
-      );
+    await init(contract, defender);
+    await challenge(contract, challenger, defender);
+    await defend(contract, defender, challenger);
   });
 
   it("Should not be able to defend without a challenge in effect", async function () {
