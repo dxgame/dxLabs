@@ -7,6 +7,11 @@ const wrong = {
   move: "GuessWhat: move not allowed",
 };
 
+const msg = {
+  challenge: "GuessWhat: challenge you",
+  defend: "GuessWhat: defend you",
+};
+
 const StateLib = {
   getHash: (prevHash, signer, message) => {
     return ethers.utils.solidityKeccak256(
@@ -29,7 +34,7 @@ async function getUpdateStateEventArgs(contract, player, step) {
   const MAX_BLOCKS_PER_MOVE = game.MAX_BLOCKS_PER_MOVE.toNumber();
   const otherPlayer = await contract.opponent(player.address);
 
-  return [
+  const updateStateEvent = [
     game.id,
     game.round,
     step,
@@ -38,6 +43,14 @@ async function getUpdateStateEventArgs(contract, player, step) {
     preBlock.number + 1 + MAX_BLOCKS_PER_MOVE,
     preBlock.number + 1 + MAX_BLOCKS_PER_MOVE * 2,
   ];
+
+  return updateStateEvent;
+}
+
+async function getStartEventArgs(contract, player) {
+  const updateStateEvent = await getUpdateStateEventArgs(contract, player, 1);
+  const [id, round, , challenger] = updateStateEvent;
+  return [id, round + 1, challenger, await contract.defender()];
 }
 
 async function expectPlayers(contract, defender, challenger) {
@@ -66,20 +79,32 @@ function moveNotAllowed(contract, player, action, error = wrong.move) {
   return expect(move(contract, player, action)).to.be.revertedWith(error);
 }
 
-async function challenge(contract, challenger, message = hashHex("GuessWhat")) {
-  await tx(move(contract, challenger, "challenge", { message }));
+async function challenge(
+  contract,
+  challenger,
+  message = hashHex(msg.challenge)
+) {
+  await expect(move(contract, challenger, "challenge", { message }))
+    .to.emit(contract, "StartEvent")
+    .withArgs(...(await getStartEventArgs(contract, challenger)));
 }
 
-async function defend(contract, defender, challenger) {
-  await expect(move(contract, defender, "defend"))
+async function defend(contract, defender, message = hashHex(msg.defend)) {
+  await expect(move(contract, defender, "defend", { message }))
     .to.emit(contract, "UpdateStateEvent")
     .withArgs(...(await getUpdateStateEventArgs(contract, defender, 2)));
 }
 
-async function revealChallenge(contract, challenger, message = "GuessWhat") {
+async function revealChallenge(contract, challenger, message = msg.challenge) {
   await expect(move(contract, challenger, "revealChallenge", { message }))
     .to.emit(contract, "UpdateStateEvent")
     .withArgs(...(await getUpdateStateEventArgs(contract, challenger, 3)));
+}
+
+async function revealDefend(contract, defender, message = msg.defend) {
+  await expect(move(contract, defender, "revealDefend", { message }))
+    .to.emit(contract, "UpdateStateEvent")
+    .withArgs(...(await getUpdateStateEventArgs(contract, defender, 4)));
 }
 
 module.exports = {
@@ -94,4 +119,5 @@ module.exports = {
   challenge,
   defend,
   revealChallenge,
+  revealDefend,
 };

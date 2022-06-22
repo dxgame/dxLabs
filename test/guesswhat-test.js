@@ -10,6 +10,7 @@ const {
   challenge,
   defend,
   revealChallenge,
+  revealDefend,
 } = require("./utils/guesswhat");
 
 describe("GuessWhat", function () {
@@ -42,7 +43,7 @@ describe("GuessWhat", function () {
   it("Should be able to defend with a challenge in effect", async function () {
     await init(contract, defender);
     await challenge(contract, challenger);
-    await defend(contract, defender, challenger);
+    await defend(contract, defender);
   });
 
   it("Should not be able to defend without a challenge in effect", async function () {
@@ -59,7 +60,15 @@ describe("GuessWhat", function () {
   it("Should be able to reveal challenge with defend in effect", async function () {
     await init(contract, defender);
     await challenge(contract, challenger);
-    await defend(contract, defender, challenger);
+    await defend(contract, defender);
     await revealChallenge(contract, challenger);
+  });
+
+  it("Should be able to reveal defend with revealed challenge", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger);
+    await defend(contract, defender);
+    await revealChallenge(contract, challenger);
+    await revealDefend(contract, defender);
   });
 });
