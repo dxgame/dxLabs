@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { tx, hashHex, HashZero, nobody } = require("./common");
+const { tx, x, HashZero, nobody } = require("./common");
 
 const wrong = {
   you: "GuessWhat: not for you now",
@@ -83,17 +83,13 @@ function moveNotAllowed(contract, player, action, error = wrong.move) {
   return expect(move(contract, player, action)).to.be.revertedWith(error);
 }
 
-async function challenge(
-  contract,
-  challenger,
-  message = hashHex(msg.challenge)
-) {
+async function challenge(contract, challenger, message = x(msg.challenge)) {
   await expect(move(contract, challenger, "challenge", { message }))
     .to.emit(contract, "StartEvent")
     .withArgs(...(await getStartEventArgs(contract, challenger)));
 }
 
-async function defend(contract, defender, message = hashHex(msg.defend)) {
+async function defend(contract, defender, message = x(msg.defend)) {
   await expect(move(contract, defender, "defend", { message }))
     .to.emit(contract, "UpdateStateEvent")
     .withArgs(...(await getUpdateStateEventArgs(contract, defender, 2)));

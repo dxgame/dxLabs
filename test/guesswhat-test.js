@@ -1,5 +1,5 @@
 const prepare = require("./utils/prepare");
-const { N, nobody } = require("./utils/common");
+const { N, nobody, x } = require("./utils/common");
 const {
   wrong,
   expectPlayers,
@@ -74,7 +74,7 @@ describe("GuessWhat", function () {
     await revealDefend(contract, defender);
   });
 
-  it("Should be able to claim winning with revealed defend", async function () {
+  it("Should be able to claim winning if defender wins", async function () {
     await init(contract, defender);
     await challenge(contract, challenger);
     await defend(contract, defender);
@@ -86,7 +86,7 @@ describe("GuessWhat", function () {
     await expectPlayers(contract, defender, nobody);
   });
 
-  it("Should not be able to claim winning if lose the game", async function () {
+  it("Should not be able to claim winning if challenger loses", async function () {
     await init(contract, defender);
     await challenge(contract, challenger);
     await defend(contract, defender);
@@ -100,5 +100,17 @@ describe("GuessWhat", function () {
       "claimWinning",
       "GuessWhat: you not winner"
     );
+  });
+
+  it("Should be able to claim winning if challenger wins", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`0`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "0");
+
+    await expectWinner(contract, challenger);
+    await claimWinning(contract, challenger);
+    await expectPlayers(contract, challenger, nobody);
   });
 });

@@ -6,9 +6,8 @@ const tx = async function (_tx) {
   return (await _tx).wait();
 };
 
-function hashHex(str) {
-  return ethers.utils.solidityKeccak256(["string"], [str]);
-}
+const hashHex = (str) =>
+  ethers.utils.solidityKeccak256(["string"], [str.toString()]);
 
 const { HashZero, AddressZero } = ethers.constants;
 
@@ -18,6 +17,7 @@ module.exports = {
   N,
   tx,
   hashHex,
+  x: hashHex,
   HashZero,
   AddressZero,
   nobody,
