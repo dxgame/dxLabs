@@ -61,20 +61,15 @@ async function expectNoPlayers(contract) {
   expect(await contract.challenger()).to.equal(AddressZero);
 }
 
-async function init(contract, defender) {
-  await expectNoPlayers(contract);
-
-  await tx(
-    contract
-      .connect(defender)
-      .challenge(...(await StateLib.getParams({ signer: defender })))
-  );
-}
-
 async function move(contract, player, action) {
   return contract
     .connect(player)
     [action](...(await StateLib.getParams({ signer: player })));
+}
+
+async function init(contract, defender) {
+  await expectNoPlayers(contract);
+  await tx(move(contract, defender, "challenge"));
 }
 
 function moveNotAllowed(contract, player, action) {
@@ -84,11 +79,7 @@ function moveNotAllowed(contract, player, action) {
 }
 
 async function challenge(contract, challenger, defender) {
-  await tx(
-    contract
-      .connect(challenger)
-      .challenge(...(await StateLib.getParams({ signer: challenger })))
-  );
+  await tx(move(contract, challenger, "challenge"));
 }
 
 async function defend(contract, defender, challenger) {
