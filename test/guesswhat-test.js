@@ -80,5 +80,6 @@ describe("GuessWhat", function () {
     await revealChallenge(contract, challenger);
     await revealDefend(contract, defender);
     await claimWinning(contract, defender);
+    await expectPlayers(contract, defender, nobody);
   });
 });

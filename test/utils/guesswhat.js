@@ -48,9 +48,13 @@ async function getUpdateStateEventArgs(contract, player, step) {
 }
 
 async function getStartEventArgs(contract, player) {
-  const updateStateEvent = await getUpdateStateEventArgs(contract, player, 1);
-  const [id, round, , challenger] = updateStateEvent;
-  return [id, round + 1, challenger, await contract.defender()];
+  const game = await contract.game();
+  return [game.id, game.round + 1, player.address, await contract.defender()];
+}
+
+async function getWinningEventArgs(contract, winner) {
+  const game = await contract.game();
+  return [game.id, game.round, winner.address];
 }
 
 async function expectPlayers(contract, defender, challenger) {
@@ -108,10 +112,9 @@ async function revealDefend(contract, defender, message = msg.defend) {
 }
 
 async function claimWinning(contract, winner) {
-  await expect(move(contract, winner, "claimWinning")).to.emit(
-    contract,
-    "WinningEvent"
-  );
+  await expect(move(contract, winner, "claimWinning"))
+    .to.emit(contract, "WinningEvent")
+    .withArgs(...(await getWinningEventArgs(contract, winner)));
 }
 
 module.exports = {
