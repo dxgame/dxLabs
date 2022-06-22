@@ -71,6 +71,18 @@ async function init(contract, defender) {
   );
 }
 
+async function move(contract, player, action) {
+  return contract
+    .connect(player)
+    [action](...(await StateLib.getParams({ signer: player })));
+}
+
+function moveNotAllowed(contract, player, action) {
+  return expect(move(contract, player, "challenge")).to.be.revertedWith(
+    "GuessWhat: move not allowed"
+  );
+}
+
 async function challenge(contract, challenger, defender) {
   await tx(
     contract
@@ -105,6 +117,8 @@ module.exports = {
   expectNoPlayers,
 
   init,
+  move,
+  moveNotAllowed,
   challenge,
   defend,
 };

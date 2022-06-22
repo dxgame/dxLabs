@@ -9,6 +9,8 @@ const {
   nobody,
   expectPlayers,
   init,
+  move,
+  moveNotAllowed,
   challenge,
   defend,
 } = require("./utils");
@@ -20,11 +22,8 @@ describe("GuessWhat", function () {
   beforeEach(async function () {
     [gameLib] = await prepare("GameLib");
     const libraries = { GameLib: gameLib.address };
-    [contract, deployer, defender, challenger, bystander] = await prepare(
-      "GuessWhat",
-      libraries,
-      N`10`
-    );
+    const preparation = await prepare("GuessWhat", libraries, N`10`);
+    [contract, deployer, defender, challenger, bystander] = preparation;
   });
 
   it("Should update defender with a new challenge if there's no defender", async function () {
@@ -42,12 +41,7 @@ describe("GuessWhat", function () {
     await init(contract, defender);
     await challenge(contract, challenger, defender);
     await expectPlayers(contract, defender, challenger);
-
-    await expect(
-      contract
-        .connect(bystander)
-        .challenge(...(await StateLib.getParams({ signer: bystander })))
-    ).to.be.revertedWith("GuessWhat: move not allowed");
+    await moveNotAllowed(contract, bystander, "challenge");
   });
 
   it("Should be able to defend with a challenge in effect", async function () {
