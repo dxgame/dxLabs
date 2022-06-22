@@ -1,5 +1,5 @@
 const prepare = require("./utils/prepare");
-const { N, nobody, x } = require("./utils/common");
+const { N, nobody, x, mineBlocks } = require("./utils/common");
 const {
   wrong,
   expectPlayers,
@@ -120,7 +120,7 @@ describe("GuessWhat", function () {
     await moveNotAllowed(contract, defender, "claimWinning", wrong.notWinner);
   });
 
-  it("Should not be able to claim winning if you are bystander if challenger wins", async function () {
+  it("Should not be able to claim winning if you are bystander #1 challenger wins", async function () {
     await init(contract, defender);
     await challenge(contract, challenger, x`1`);
     await defend(contract, defender, x`0`);
@@ -131,7 +131,7 @@ describe("GuessWhat", function () {
     await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
   });
 
-  it("Should not be able to claim winning if you are bystander if defender wins", async function () {
+  it("Should not be able to claim winning if you are bystander #2 defender wins", async function () {
     await init(contract, defender);
     await challenge(contract, challenger, x`1`);
     await defend(contract, defender, x`1`);
@@ -140,5 +140,15 @@ describe("GuessWhat", function () {
 
     await expectWinner(contract, defender);
     await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
+  });
+
+  it("Should be able to claim winning if defender did not response", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await expectWinner(contract, nobody);
+
+    await mineBlocks(150);
+    await claimWinning(contract, challenger);
+    await expectPlayers(contract, challenger, nobody);
   });
 });

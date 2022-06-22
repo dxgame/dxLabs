@@ -1,9 +1,17 @@
-const { ethers } = require("hardhat");
+const hardhatRuntimeEnvironment = require("hardhat");
+
+const { ethers } = hardhatRuntimeEnvironment;
 
 const N = (n) => ethers.utils.parseEther(n.toString());
 
 const tx = async function (_tx) {
   return (await _tx).wait();
+};
+
+const mineBlocks = (n = 100) => {
+  return hardhatRuntimeEnvironment.network.provider.send("hardhat_mine", [
+    ethers.utils.hexlify(n),
+  ]);
 };
 
 const hashHex = (str) =>
@@ -14,6 +22,7 @@ const { HashZero, AddressZero } = ethers.constants;
 const nobody = { address: AddressZero };
 
 module.exports = {
+  mineBlocks,
   N,
   tx,
   hashHex,
