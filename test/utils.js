@@ -2,6 +2,10 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 const N = (n) => ethers.utils.parseEther(n.toString());
+const wrong = {
+  you: "GuessWhat: not for you now",
+  move: "GuessWhat: move not allowed",
+};
 
 const prepare = async function (contractName, libraries, ...args) {
   const signers = await ethers.getSigners();
@@ -72,10 +76,8 @@ async function init(contract, defender) {
   await tx(move(contract, defender, "challenge"));
 }
 
-function moveNotAllowed(contract, player, action) {
-  return expect(move(contract, player, action)).to.be.revertedWith(
-    "GuessWhat: move not allowed"
-  );
+function moveNotAllowed(contract, player, action, error = wrong.move) {
+  return expect(move(contract, player, action)).to.be.revertedWith(error);
 }
 
 async function challenge(contract, challenger) {
@@ -96,6 +98,7 @@ async function defend(contract, defender, challenger) {
 
 module.exports = {
   N,
+  wrong,
   prepare,
   tx,
   StateLib,

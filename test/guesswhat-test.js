@@ -1,10 +1,7 @@
-const { expect } = require("chai");
-
 const {
   N,
   prepare,
-  tx,
-  StateLib,
+  wrong,
   nobody,
   init,
   expectPlayers,
@@ -57,12 +54,7 @@ describe("GuessWhat", function () {
     await moveNotAllowed(contract, defender, "defend");
 
     await challenge(contract, challenger);
-
-    await expect(
-      contract
-        .connect(bystander)
-        .defend(...(await StateLib.getParams({ signer: bystander })))
-    ).to.be.revertedWith("GuessWhat: not for you now");
+    await moveNotAllowed(contract, bystander, "defend", wrong.you);
   });
 
   it("Should be able to reveal challenge with defend in effect", async function () {
