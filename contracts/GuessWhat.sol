@@ -25,9 +25,9 @@ library GuessWhatLib {
     using GameLib for GameLib.Game;
 
     function whoWins(GameLib.Game storage game) internal view returns (address) {
-        if (game.states.length != game.MAX_STATES) {
-            return address(0);
-        }
+        require(game.states.length > 0, "GuessWhat: game not started");
+
+        if (game.states.length != game.MAX_STATES) return address(0);
 
         string memory revealedRequest = game.states[2].message;
         string memory revealedResponse = game.states[3].message;

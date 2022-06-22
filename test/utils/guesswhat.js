@@ -117,6 +117,10 @@ async function claimWinning(contract, winner) {
     .withArgs(...(await getWinningEventArgs(contract, winner)));
 }
 
+async function expectWinner(contract, winner) {
+  await expect(await contract.whoWins()).to.equal(winner.address);
+}
+
 module.exports = {
   wrong,
   StateLib,
@@ -131,4 +135,5 @@ module.exports = {
   revealChallenge,
   revealDefend,
   claimWinning,
+  expectWinner,
 };
