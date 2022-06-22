@@ -61,10 +61,10 @@ async function expectNoPlayers(contract) {
   expect(await contract.challenger()).to.equal(AddressZero);
 }
 
-async function move(contract, player, action) {
+async function move(contract, player, action, args) {
   return contract
     .connect(player)
-    [action](...(await StateLib.getParams({ signer: player })));
+    [action](...(await StateLib.getParams({ signer: player, ...args })));
 }
 
 async function init(contract, defender) {
@@ -73,7 +73,7 @@ async function init(contract, defender) {
 }
 
 function moveNotAllowed(contract, player, action) {
-  return expect(move(contract, player, "challenge")).to.be.revertedWith(
+  return expect(move(contract, player, action)).to.be.revertedWith(
     "GuessWhat: move not allowed"
   );
 }
@@ -84,12 +84,9 @@ async function challenge(contract, challenger, defender) {
 
 async function defend(contract, defender, challenger) {
   await expect(
-    contract.connect(defender).defend(
-      ...(await StateLib.getParams({
-        prevHash: await contract.lastStateHash(),
-        signer: defender,
-      }))
-    )
+    move(contract, defender, "defend", {
+      prevHash: await contract.lastStateHash(),
+    })
   )
     .to.emit(contract, "UpdateStateEvent")
     .withArgs(
