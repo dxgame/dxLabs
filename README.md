@@ -14,18 +14,23 @@ Proof of Luck
     Guess What
 
     Open Lottery
-    
+
         One Number
         Multiple Numbers
         Host-less Hide-and-Seek
 ```
 
-## Libraris for onchain gaming
-
 ## Solidity libraris for onchain gaming
+
 ```
 GameLib.sol
 StateLib.sol
+```
+
+## Game examples
+
+```
+GuessWhat.sol
 ```
 
 ## build with github/codespaces, save your time
