@@ -8,9 +8,10 @@ const tx = async function (_tx) {
   return (await _tx).wait();
 };
 
-const mineBlocks = (n = 100) => {
+const mineBlocks = (n = 100, s = 1) => {
   return hardhatRuntimeEnvironment.network.provider.send("hardhat_mine", [
-    ethers.utils.hexlify(n),
+    ethers.utils.hexStripZeros(n),
+    ethers.utils.hexStripZeros(s),
   ]);
 };
 
