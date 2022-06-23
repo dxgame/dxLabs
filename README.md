@@ -1,7 +1,20 @@
-# POE Game Token
+# dxLabs - decentralized game buidler
 
+## build with github/codespaces, save your time
 
-## POE Articles
+Try running some of the following tasks:
+
+```shell
+npm run test
+```
+
+## started from hardhat advanced sample project
+
+More hardhat tasks, please check 
+
+https://github.com/NomicFoundation/hardhat/tree/master/packages/hardhat-core/sample-projects/advanced
+
+## POE (Proof of Excellence) Articles
 
 [History of Proof of Excellence and new possibility — Decentralized Game](https://medium.com/@RagnarDoge/history-of-proof-of-excellence-and-new-possibility-decentralized-game-a7bb75652fc6)
 
@@ -19,16 +32,4 @@
 
 [A design of PoE (Proof of Excellence) token #7 - Introduce Intrinsic Unpredictability](https://medium.com/@RagnarDoge/a-design-of-poe-proof-of-excellence-token-7-introduce-true-unpredictability-fbbd6d5a14a5)
 
-## build with github/codespaces, save your time
 
-Try running some of the following tasks:
-
-```shell
-npm run test
-```
-
-## started from hardhat advanced sample project
-
-More hardhat tasks, please check 
-
-https://github.com/NomicFoundation/hardhat/tree/master/packages/hardhat-core/sample-projects/advanced
