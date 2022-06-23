@@ -12,6 +12,7 @@ const {
   revealChallenge,
   revealDefend,
   claimWinning,
+  cannotClaimWinning,
   expectWinner,
 } = require("./utils/guesswhat");
 
@@ -94,7 +95,7 @@ describe("GuessWhat", function () {
     await revealDefend(contract, defender, "1");
 
     await expectWinner(contract, defender);
-    await moveNotAllowed(contract, challenger, "claimWinning", wrong.notWinner);
+    await cannotClaimWinning(contract, challenger);
   });
 
   it("Should be able to claim winning if challenger wins", async function () {
@@ -117,7 +118,7 @@ describe("GuessWhat", function () {
     await revealDefend(contract, defender, "0");
 
     await expectWinner(contract, challenger);
-    await moveNotAllowed(contract, defender, "claimWinning", wrong.notWinner);
+    await cannotClaimWinning(contract, bystander);
   });
 
   it("Should not be able to claim winning if you are bystander #1 challenger wins", async function () {
@@ -128,7 +129,7 @@ describe("GuessWhat", function () {
     await revealDefend(contract, defender, "0");
 
     await expectWinner(contract, challenger);
-    await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
+    await cannotClaimWinning(contract, bystander);
   });
 
   it("Should not be able to claim winning if you are bystander #2 defender wins", async function () {
@@ -139,7 +140,7 @@ describe("GuessWhat", function () {
     await revealDefend(contract, defender, "1");
 
     await expectWinner(contract, defender);
-    await moveNotAllowed(contract, bystander, "claimWinning", wrong.notWinner);
+    await cannotClaimWinning(contract, bystander);
   });
 
   it("Should be able to claim winning if defender did not response", async function () {
@@ -147,8 +148,23 @@ describe("GuessWhat", function () {
     await challenge(contract, challenger, x`1`);
     await expectWinner(contract, nobody);
 
+    await cannotClaimWinning(contract, challenger);
     await mineBlocks(150);
     await claimWinning(contract, challenger);
+
     await expectPlayers(contract, challenger, nobody);
+  });
+
+  it("Should be able to claim winning if challenger did not response", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`1`);
+    await expectWinner(contract, nobody);
+
+    await cannotClaimWinning(contract, defender);
+    await mineBlocks(150);
+    await claimWinning(contract, defender);
+  
+    await expectPlayers(contract, defender, nobody);
   });
 });
