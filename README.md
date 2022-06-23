@@ -17,7 +17,7 @@
 
 [A design of PoE (Proof of Excellence) token #6-The cost of decentralization and state channels](https://medium.com/@RagnarDoge/a-design-of-poe-proof-of-excellence-token-6-the-cost-of-decentralization-and-state-channels-d6aec8e2ad48)
 
-TODO [A design of PoE (Proof of Excellence) token #7 - Introduce True Unpredictability](...)
+[A design of PoE (Proof of Excellence) token #7 - Introduce Intrinsic Unpredictability](https://medium.com/@RagnarDoge/a-design-of-poe-proof-of-excellence-token-7-introduce-true-unpredictability-fbbd6d5a14a5)
 
 ## build with github/codespaces, save your time
 
