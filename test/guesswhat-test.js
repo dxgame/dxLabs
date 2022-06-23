@@ -143,7 +143,7 @@ describe("GuessWhat", function () {
     await cannotClaimWinning(contract, bystander);
   });
 
-  it("Should be able to claim winning if defender did not response", async function () {
+  it("Should be able to claim winning if defender did not response #1 defend", async function () {
     await init(contract, defender);
     await challenge(contract, challenger, x`1`);
     await expectWinner(contract, nobody);
@@ -155,7 +155,21 @@ describe("GuessWhat", function () {
     await expectPlayers(contract, challenger, nobody);
   });
 
-  it("Should be able to claim winning if challenger did not response", async function () {
+  it("Should be able to claim winning if defender did not response #1 reveal", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`1`);
+    await revealChallenge(contract, challenger, "1");
+    await expectWinner(contract, nobody);
+
+    await cannotClaimWinning(contract, challenger);
+    await mineBlocks(150);
+    await claimWinning(contract, challenger);
+
+    await expectPlayers(contract, challenger, nobody);
+  });
+
+  it("Should be able to claim winning if challenger did not response # reveal", async function () {
     await init(contract, defender);
     await challenge(contract, challenger, x`1`);
     await defend(contract, defender, x`1`);
