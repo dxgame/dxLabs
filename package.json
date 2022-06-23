@@ -1,5 +1,5 @@
 {
-  "name": "gogametoken",
+  "name": "dxlabs",
   "version": "1.0.0",
   "description": "Go Game on Block Chain",
   "main": "index.js",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxgame/GoGameToken.git"
+    "url": "git+https://github.com/dxgame/dxLabs.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dxgame/GoGameToken/issues"
+    "url": "https://github.com/dxgame/dxLabs/issues"
   },
-  "homepage": "https://github.com/dxgame/GoGameToken#readme",
+  "homepage": "https://github.com/dxgame/dxLabs#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0"
   },

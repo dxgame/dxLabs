@@ -1,5 +1,33 @@
 # dxLabs - decentralized game buidler
 
+## Proof of concept for decentralized games
+```
+Proof of Excellence
+
+    Go Game
+
+Proof of Luck
+
+    Rock Paper Scissors
+
+    Guess Bit
+    Guess What
+
+    Open Lottery
+    
+        One Number
+        Multiple Numbers
+        Host-less Hide-and-Seek
+```
+
+## Libraris for onchain gaming
+
+## Solidity libraris for onchain gaming
+```
+GameLib.sol
+StateLib.sol
+```
+
 ## build with github/codespaces, save your time
 
 Try running some of the following tasks:
