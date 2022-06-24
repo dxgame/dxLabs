@@ -32,22 +32,18 @@ describe("GuessWhat", function () {
   });
 
   it("Should update challenger with a new challenge if there is defender", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender);
+    await fight(contract, [challenger, defender], [x`1c`]);
     await expectPlayers(contract, defender, challenger);
   });
 
   it("Should not allowed to challenge with a challenge in effect", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender);
+    await fight(contract, [challenger, defender], [x`1c`]);
     await expectPlayers(contract, defender, challenger);
     await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
   });
 
   it("Should be able to defend with a challenge in effect", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender);
-    await defend(contract, defender);
+    await fight(contract, [challenger, defender], [x`1c`, x`1d`]);
   });
 
   it("Should not be able to defend without a challenge in effect", async function () {
@@ -62,18 +58,11 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to reveal challenge with defend in effect", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender);
-    await defend(contract, defender);
-    await revealChallenge(contract, challenger);
+    await fight(contract, [challenger, defender], [x`1c`, x`1d`, `1c`]);
   });
 
   it("Should be able to reveal defend with revealed challenge", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender);
-    await defend(contract, defender);
-    await revealChallenge(contract, challenger);
-    await revealDefend(contract, defender);
+    await fight(contract, [challenger, defender], [x`1c`, x`1d`, `1c`, `1d`]);
   });
 
   it("Should be able to claim winning if defender wins", async function () {
