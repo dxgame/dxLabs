@@ -255,7 +255,6 @@ describe("GuessWhat", function () {
   //   await expectPlayers(contract, challenger, nobody);
   // });
 
-  // TODO: claimWinning if there's no defender
   // TODO: forwarders
   // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
 });
