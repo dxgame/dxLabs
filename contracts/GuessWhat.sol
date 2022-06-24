@@ -60,8 +60,7 @@ contract GuessWhat is Ownable, ERC20 {
         uint256 states,
         address indexed player,
         address indexed nextPlayer,
-        uint256 nextMoveDeadline,
-        uint256 noResponseSoClaimWinningDeadline
+        uint256 nextMoveDeadline
     );
 
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {

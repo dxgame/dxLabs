@@ -38,7 +38,8 @@
 			"extensions": [
 				"GitHub.vscode-pull-request-github",
 				"JuanBlanco.solidity",
-				"dbaeumer.vscode-eslint"
+				"dbaeumer.vscode-eslint",
+				"GitHub.copilot"
 			]
 		}
 	},

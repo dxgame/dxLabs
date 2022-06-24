@@ -39,7 +39,6 @@ library GameLib {
         StateLib.State[] states;
 
         uint256 nextMoveDeadline;
-        uint256 noResponseSoClaimWinningDeadline;
     }
 
     event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
@@ -51,8 +50,7 @@ library GameLib {
         uint256 states,
         address indexed player,
         address indexed nextPlayer,
-        uint256 nextMoveDeadline,
-        uint256 noResponseSoClaimWinningDeadline
+        uint256 nextMoveDeadline
     );
 
     function challenger(Game storage game) public view returns (address) {
@@ -103,13 +101,7 @@ library GameLib {
 
     function _noResponse(Game storage game) private view returns (bool) {
         return !_isFull(game)
-            && (block.number > game.nextMoveDeadline)
-            && (block.number <= game.noResponseSoClaimWinningDeadline);
-    }
-
-    function _lastGameAbandoned(Game storage game) private view returns (bool) {
-        return (game.noResponseSoClaimWinningDeadline != 0)
-            && (block.number > game.noResponseSoClaimWinningDeadline);
+            && (block.number > game.nextMoveDeadline);
     }
 
     modifier empty(Game storage game) {
@@ -134,8 +126,7 @@ library GameLib {
 
     modifier noResponse(Game storage game, address winner) {
         require(block.number > game.nextMoveDeadline, "GuessWhat: you are too early");
-        require(block.number <= game.noResponseSoClaimWinningDeadline, "GuessWhat: you are too late");
-        require(_lastPlayer(game) == winner, "GuessWhat: you are not the winner");
+        require(_lastPlayer(game) == winner, "GuessWhat: you not winner");
         _;
     }
 
@@ -153,7 +144,6 @@ library GameLib {
 
     function _updateDeadlines(Game storage game) private {
         game.nextMoveDeadline = block.number + game.MAX_BLOCKS_PER_MOVE;
-        game.noResponseSoClaimWinningDeadline = game.nextMoveDeadline + game.MAX_BLOCKS_PER_MOVE;
     }
 
     function _pushState(Game storage game, StateLib.State memory state) private beforeDeadline(game) validNewState(game, state) {
@@ -166,8 +156,7 @@ library GameLib {
             game.states.length,
             state.player,
             _nextPlayer(game, state.player),
-            game.nextMoveDeadline,
-            game.noResponseSoClaimWinningDeadline
+            game.nextMoveDeadline
         );
     }
 
@@ -180,7 +169,6 @@ library GameLib {
         delete game.players;
         delete game.states;
         game.nextMoveDeadline = 0;
-        game.noResponseSoClaimWinningDeadline = 0;
         emit ResetEvent(game.id, game.round, player);
     }
 
@@ -238,7 +226,8 @@ library GameLib {
     }
 
     function start(Game storage game, StateLib.State memory state, address _defender) internal {
-        if (game.RESTART_ABANDONED && _lastGameAbandoned(game)) {
+        if (_isFull(game)) {
+
             _reset(game, state.player);
         }
         _start(game, state, _defender);
@@ -252,7 +241,7 @@ library GameLib {
         _pushState(game, state);
 
         if (game.AUTO_WIN_AT_LAST_MOVE
-            && game.states.length == game.MAX_STATES
+            && _isFull(game)
             && whoWins(game) == state.player
         ) {
             _claimWinning(game, state, whoWins);

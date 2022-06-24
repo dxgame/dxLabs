@@ -42,7 +42,6 @@ async function getUpdateStateEventArgs(contract, player, step) {
     player.address,
     otherPlayer,
     preBlock.number + 1 + MAX_BLOCKS_PER_MOVE,
-    preBlock.number + 1 + MAX_BLOCKS_PER_MOVE * 2,
   ];
 
   return updateStateEvent;
