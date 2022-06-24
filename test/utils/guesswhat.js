@@ -72,12 +72,17 @@ async function expectNoPlayers(contract) {
 async function move(contract, player, action, args = {}) {
   const prevHash = args.prevHash || (await contract.lastStateHash());
   const params = await StateLib.getParams({ player, prevHash, ...args });
-
-  return contract.connect(player)[action](...params);
+  const forwarder = contract.__god_forbid__forwarder || player;
+  return contract.connect(forwarder)[action](...params);
 }
 
-async function init(contract, firstcomer) {
+async function init(contract, firstcomer, forwarder) {
   await expectNoPlayers(contract);
+
+  if (forwarder) {
+    contract.__god_forbid__forwarder = forwarder;
+  }
+
   await expect(move(contract, firstcomer, "challenge"))
     .to.emit(contract, "WinningEvent")
     .withArgs(...(await getWinningEventArgs(contract, firstcomer)));
@@ -132,10 +137,10 @@ async function cannotClaimWinning(contract, player) {
 
 async function fight(
   contract,
-  [challenger, defender, bystander],
+  { challenger, defender, bystander, forwarder },
   [challengeHash, defendHash, revealedChallenge, revealedDefend]
 ) {
-  await init(contract, defender);
+  await init(contract, defender, forwarder);
 
   if (challengeHash) {
     await challenge(contract, challenger, defender, challengeHash);
