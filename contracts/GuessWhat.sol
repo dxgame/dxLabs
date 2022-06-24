@@ -110,8 +110,7 @@ contract GuessWhat is Ownable, ERC20 {
         bytes32 prehash, address player, string memory encryptedResponse, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.TWO_DefenderDefended) {
         game.play(
-            StateLib.State(prehash, player, encryptedResponse, v, r, s),
-            GuessWhatLib.whoWins
+            StateLib.State(prehash, player, encryptedResponse, v, r, s)
         );
     }
 
@@ -124,8 +123,7 @@ contract GuessWhat is Ownable, ERC20 {
         );
 
         game.play(
-            StateLib.State(prehash, player, revealedRequest, v, r, s),
-            GuessWhatLib.whoWins
+            StateLib.State(prehash, player, revealedRequest, v, r, s)
         );
     }
 
@@ -136,11 +134,8 @@ contract GuessWhat is Ownable, ERC20 {
             strEqual(game.states[1].message, hashHex(revealedResponse)),
             "GuessWhat: do not match"
         );
-
-        game.play(
-            StateLib.State(prehash, player, revealedResponse, v, r, s),
-            GuessWhatLib.whoWins
-        );
+        StateLib.State memory state = StateLib.State(prehash, player, revealedResponse, v, r, s);
+        game.play(state);
     }
 
     function claimWinning(

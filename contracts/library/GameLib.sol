@@ -221,7 +221,6 @@ library GameLib {
 
     function start(Game storage game, StateLib.State memory state, address _defender) internal {
         if (_isFull(game)) {
-
             _reset(game, state.player);
         }
         _start(game, state, _defender);
@@ -229,14 +228,9 @@ library GameLib {
 
     function play(
         Game storage game,
-        StateLib.State memory state,
-        function (Game storage) returns (address) whoWins
+        StateLib.State memory state
     ) internal notEmpty(game) {
         _pushState(game, state);
-
-        if (_isFull(game) && whoWins(game) == state.player) {
-            _claimWinning(game, state, whoWins);
-        }
     }
 
     function claimWinning(
