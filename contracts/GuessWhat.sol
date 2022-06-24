@@ -65,7 +65,7 @@ contract GuessWhat is Ownable, ERC20 {
 
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
-        game.config(true, false, 4, 100);
+        game.config(false, 4, 100);
     }
 
     function challenger() public view returns (address) {

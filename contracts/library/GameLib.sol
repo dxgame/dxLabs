@@ -29,7 +29,6 @@ library GameLib {
         uint256 id;
         uint256 round;
 
-        bool RESTART_ABANDONED;
         bool AUTO_WIN_AT_LAST_MOVE;
         uint256 MAX_STATES;
         uint256 MAX_BLOCKS_PER_MOVE;
@@ -214,12 +213,10 @@ library GameLib {
 
     function config(
         Game storage game,
-        bool restartAbandoned,
         bool autoWinAtLastMove,
         uint256 maxStates,
         uint256 maxBlocksPerMove
     ) internal {
-        game.RESTART_ABANDONED = restartAbandoned;
         game.AUTO_WIN_AT_LAST_MOVE = autoWinAtLastMove;
         game.MAX_STATES = maxStates;
         game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
