@@ -49,14 +49,9 @@ async function getUpdateStateEventArgs(contract, player, step) {
   return updateStateEvent;
 }
 
-async function getStartEventArgs(contract, player) {
+async function getStartEventArgs(contract, player, defender) {
   const game = await contract.game();
-  return [
-    game.id,
-    game.round.add(1),
-    player.address,
-    await contract.defender(),
-  ];
+  return [game.id, game.round.add(1), player.address, defender.address];
 }
 
 async function getWinningEventArgs(contract, winner) {
@@ -92,10 +87,15 @@ function moveNotAllowed(contract, player, action, error = wrong.move) {
   return expect(move(contract, player, action)).to.be.revertedWith(error);
 }
 
-async function challenge(contract, challenger, message = x(msg.challenge)) {
+async function challenge(
+  contract,
+  challenger,
+  defender,
+  message = x(msg.challenge)
+) {
   await expect(move(contract, challenger, "challenge", { message }))
     .to.emit(contract, "StartEvent")
-    .withArgs(...(await getStartEventArgs(contract, challenger)));
+    .withArgs(...(await getStartEventArgs(contract, challenger, defender)));
 }
 
 async function defend(contract, defender, message = x(msg.defend)) {

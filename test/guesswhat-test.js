@@ -32,20 +32,20 @@ describe("GuessWhat", function () {
 
   it("Should update challenger with a new challenge if there is defender", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
+    await challenge(contract, challenger, defender);
     await expectPlayers(contract, defender, challenger);
   });
 
   it("Should not allowed to challenge with a challenge in effect", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
+    await challenge(contract, challenger, defender);
     await expectPlayers(contract, defender, challenger);
     await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
   });
 
   it("Should be able to defend with a challenge in effect", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
+    await challenge(contract, challenger, defender);
     await defend(contract, defender);
   });
 
@@ -56,20 +56,20 @@ describe("GuessWhat", function () {
     await init(contract, defender);
     await moveNotAllowed(contract, defender, "defend");
 
-    await challenge(contract, challenger);
+    await challenge(contract, challenger, defender);
     await moveNotAllowed(contract, bystander, "defend", wrong.you);
   });
 
   it("Should be able to reveal challenge with defend in effect", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
+    await challenge(contract, challenger, defender);
     await defend(contract, defender);
     await revealChallenge(contract, challenger);
   });
 
   it("Should be able to reveal defend with revealed challenge", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger);
+    await challenge(contract, challenger, defender);
     await defend(contract, defender);
     await revealChallenge(contract, challenger);
     await revealDefend(contract, defender);
@@ -77,7 +77,7 @@ describe("GuessWhat", function () {
 
   it("Should be able to claim winning if defender wins", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
+    await challenge(contract, challenger, defender, x`1`);
     await defend(contract, defender, x`1`);
     await revealChallenge(contract, challenger, "1");
     await revealDefend(contract, defender, "1");
@@ -89,7 +89,7 @@ describe("GuessWhat", function () {
 
   it("Should be able to claim winning if challenger wins", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
+    await challenge(contract, challenger, defender, x`1`);
     await defend(contract, defender, x`0`);
     await revealChallenge(contract, challenger, "1");
     await revealDefend(contract, defender, "0");
@@ -101,7 +101,7 @@ describe("GuessWhat", function () {
 
   it("Should be able to claim winning if defender did not response #1 defend", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
+    await challenge(contract, challenger, defender, x`1`);
     await expectWinner(contract, nobody);
 
     await cannotClaimWinning(contract, challenger);
@@ -113,7 +113,7 @@ describe("GuessWhat", function () {
 
   it("Should be able to claim winning if defender did not response #1 reveal", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
+    await challenge(contract, challenger, defender, x`1`);
     await defend(contract, defender, x`1`);
     await revealChallenge(contract, challenger, "1");
     await expectWinner(contract, nobody);
@@ -127,7 +127,7 @@ describe("GuessWhat", function () {
 
   it("Should be able to claim winning if challenger did not response #2 reveal", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
+    await challenge(contract, challenger, defender, x`1`);
     await defend(contract, defender, x`1`);
     await expectWinner(contract, nobody);
 
@@ -140,12 +140,13 @@ describe("GuessWhat", function () {
 
   it("Should be able to start a new game after last game settled", async function () {
     await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
+    await challenge(contract, challenger, defender, x`1`);
     await defend(contract, defender, x`0`);
     await revealChallenge(contract, challenger, "1");
     await revealDefend(contract, defender, "0");
+    await expectWinner(contract, challenger);
 
-    await challenge(contract, bystander);
+    await challenge(contract, bystander, challenger);
     await expectPlayers(contract, challenger, bystander);
   });
 
