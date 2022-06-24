@@ -107,7 +107,7 @@ contract GuessWhat is Ownable, ERC20 {
     ) external challengeable {
         game.start(
             StateLib.State(prehash, player, encryptedRequest, v, r, s),
-            game.winner
+            GuessWhatLib.whoWins
         );
     }
 

@@ -183,9 +183,12 @@ isFull(game), "GuessWhat: states overflow");
         _reset(game, state.player);
     }
 
-    function _start(Game storage game, StateLib.State memory state, address _defender) private empty(game) {
+    function _start(Game storage game, StateLib.State memory state) private empty(game) {
         require(game.MAX_BLOCKS_PER_MOVE != 0,
             "GuessWhat: configure your game first please");
+
+        address _defender = defender(game);
+        require(state.player != _defender, "GuessWhat: you are so ducking boring");
 
         // No winner yet, claim winning directly
         if (defender(game) == address(0)) {
@@ -219,7 +222,6 @@ isFull(game), "GuessWhat: states overflow");
     function start(
         Game storage game,
         StateLib.State memory state,
-        address _defender,
         function (Game storage) returns (address) whoWins
     ) internal {
         require(!isInProgress(game), "GuessWhat: game in process!");
@@ -228,7 +230,7 @@ isFull(game), "GuessWhat: states overflow");
             _claimWinning(game, state, whoWins);
         }
 
-        _start(game, state, _defender);
+        _start(game, state);
     }
 
     function play(
