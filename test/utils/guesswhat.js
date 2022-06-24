@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+// eslint-disable-next-line no-unused-vars
 const { tx, x, HashZero, nobody } = require("./common");
 
 const wrong = {
