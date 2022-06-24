@@ -6,6 +6,7 @@ const {
   expectNoPlayers,
   moveNotAllowed,
 
+  fight,
   init,
   challenge,
   defend,
@@ -92,8 +93,7 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to claim winning if defender did not response #1 defend", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender, x`1`);
+    await fight(contract, [challenger, defender], [x`1c`]);
     await expectWinner(contract, nobody);
 
     await cannotClaimWinning(contract, challenger);
@@ -104,10 +104,7 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to claim winning if defender did not response #1 reveal", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender, x`1`);
-    await defend(contract, defender, x`1`);
-    await revealChallenge(contract, challenger, "1");
+    await fight(contract, [challenger, defender], [x`1c`, x`1d`, `1c`]);
     await expectWinner(contract, nobody);
 
     await cannotClaimWinning(contract, challenger);
@@ -118,9 +115,7 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to claim winning if challenger did not response #2 reveal", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender, x`1`);
-    await defend(contract, defender, x`1`);
+    await fight(contract, [challenger, defender], [x`1c`, x`1d`]);
     await expectWinner(contract, nobody);
 
     await cannotClaimWinning(contract, defender);
@@ -131,13 +126,9 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to start a new game after last game settled", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender, x`1`);
-    await defend(contract, defender, x`0`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "0");
-    await expectWinner(contract, challenger);
+    await fight(contract, [challenger, defender], [x`1c`, x`0d`, `1c`, `0d`]);
 
+    await expectWinner(contract, challenger);
     await challenge(contract, bystander, challenger);
     await expectPlayers(contract, challenger, bystander);
   });
@@ -151,27 +142,3 @@ describe("GuessWhat", function () {
   // TODO: forwarders
   // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
 });
-
-async function fight(
-  contract,
-  [challenger, defender, bystander],
-  [challengeHash, defendHash, revealedChallenge, revealedDefend]
-) {
-  await init(contract, defender);
-
-  if (challengeHash) {
-    await challenge(contract, challenger, defender, challengeHash);
-  }
-
-  if (defendHash) {
-    await defend(contract, defender, defendHash);
-  }
-
-  if (revealedChallenge) {
-    await revealChallenge(contract, challenger, revealedChallenge);
-  }
-
-  if (revealedDefend) {
-    await revealDefend(contract, defender, revealedDefend);
-  }
-}

@@ -130,12 +130,37 @@ async function cannotClaimWinning(contract, player) {
   return moveNotAllowed(contract, player, "claimWinning", wrong.winning);
 }
 
+async function fight(
+  contract,
+  [challenger, defender, bystander],
+  [challengeHash, defendHash, revealedChallenge, revealedDefend]
+) {
+  await init(contract, defender);
+
+  if (challengeHash) {
+    await challenge(contract, challenger, defender, challengeHash);
+  }
+
+  if (defendHash) {
+    await defend(contract, defender, defendHash);
+  }
+
+  if (revealedChallenge) {
+    await revealChallenge(contract, challenger, revealedChallenge);
+  }
+
+  if (revealedDefend) {
+    await revealDefend(contract, defender, revealedDefend);
+  }
+}
+
 module.exports = {
   wrong,
   StateLib,
   expectPlayers,
   expectNoPlayers,
 
+  fight,
   init,
   move,
   moveNotAllowed,
