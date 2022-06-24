@@ -29,7 +29,6 @@ library GameLib {
         uint256 id;
         uint256 round;
 
-        bool AUTO_WIN_AT_LAST_MOVE;
         uint256 MAX_STATES;
         uint256 MAX_BLOCKS_PER_MOVE;
  
@@ -213,11 +212,9 @@ library GameLib {
 
     function config(
         Game storage game,
-        bool autoWinAtLastMove,
         uint256 maxStates,
         uint256 maxBlocksPerMove
     ) internal {
-        game.AUTO_WIN_AT_LAST_MOVE = autoWinAtLastMove; //TODO: always true, win without claiming
         game.MAX_STATES = maxStates;
         game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
     }
@@ -237,10 +234,7 @@ library GameLib {
     ) internal notEmpty(game) {
         _pushState(game, state);
 
-        if (game.AUTO_WIN_AT_LAST_MOVE
-            && _isFull(game)
-            && whoWins(game) == state.player
-        ) {
+        if (_isFull(game) && whoWins(game) == state.player) {
             _claimWinning(game, state, whoWins);
         }
     }
