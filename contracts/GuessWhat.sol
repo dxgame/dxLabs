@@ -101,17 +101,8 @@ contract GuessWhat is Ownable, ERC20 {
     function challenge(
         bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.ONE_ChallengeStarted) {
-        StateLib.State memory state = StateLib.State(prehash, player, encryptedRequest, v, r, s);
-
-        // No winner yet, claim winning directly
-        if (game.winner == address(0)) {
-            state.verifySignature();
-            game.winner = player;
-            return;
-        }
-
         game.start(
-            state,
+            StateLib.State(prehash, player, encryptedRequest, v, r, s),
             game.winner
         );
     }

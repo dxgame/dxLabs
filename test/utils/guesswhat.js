@@ -75,9 +75,11 @@ async function move(contract, player, action, args = {}) {
   return contract.connect(player)[action](...params);
 }
 
-async function init(contract, defender) {
+async function init(contract, firstcomer) {
   await expectNoPlayers(contract);
-  await tx(move(contract, defender, "challenge"));
+  await expect(move(contract, firstcomer, "challenge"))
+    .to.emit(contract, "WinningEvent")
+    .withArgs(...(await getWinningEventArgs(contract, firstcomer)));
 }
 
 function moveNotAllowed(contract, player, action, error = wrong.move) {

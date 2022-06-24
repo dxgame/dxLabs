@@ -14,11 +14,11 @@ import "./StateLib.sol";
     step 5: winner claims winning
 
     if (the next mover did not move before nextMoveDeadline) {
-        the current mover can claim winning in noResponseSoClaimWinningDeadline
+        the last mover wins
     }
 
-    if (no body do any shit before noResponseSoClaimWinningDeadline) {
-        anyone can start a new challenge
+    if (states.length == MAX_STATES) {
+        the winner will be determined by cutomized game-specific function whoWins
     }
 */
 
@@ -201,8 +201,15 @@ library GameLib {
     }
 
     function _start(Game storage game, StateLib.State memory state, address _defender) private empty(game) {
-        require(game.MAX_STATES !=0 && game.MAX_BLOCKS_PER_MOVE != 0,
+        require(game.MAX_BLOCKS_PER_MOVE != 0,
             "GuessWhat: configure your game first please");
+
+        // No winner yet, claim winning directly
+        if (defender(game) == address(0)) {
+            state.verifySignature();
+            _announceWinning(game, state.player);
+            return;
+        }
 
         game.round++;
         _setPlayers(game, state.player, _defender);

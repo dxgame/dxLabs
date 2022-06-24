@@ -178,7 +178,7 @@ describe("GuessWhat", function () {
     await cannotClaimWinning(contract, defender);
     await mineBlocks(150);
     await claimWinning(contract, defender);
-  
+
     await expectPlayers(contract, defender, nobody);
   });
 
@@ -207,33 +207,33 @@ describe("GuessWhat", function () {
     await cannotClaimWinning(contract, bystander);
   });
 
-  it("Should not be able to claim winning if abandoned #3 after reveal", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
-    await defend(contract, defender, x`1`);
-    await revealChallenge(contract, challenger, "1");
-    await expectWinner(contract, nobody);
+  // it("Should not be able to claim winning if abandoned #3 after reveal", async function () {
+  //   await init(contract, defender);
+  //   await challenge(contract, challenger, x`1`);
+  //   await defend(contract, defender, x`1`);
+  //   await revealChallenge(contract, challenger, "1");
+  //   await expectWinner(contract, nobody);
 
-    await cannotClaimWinning(contract, defender);
-    await mineBlocks(250);
-    await cannotClaimWinning(contract, defender);
-    await cannotClaimWinning(contract, challenger);
-    await cannotClaimWinning(contract, bystander);
-  });
+  //   await cannotClaimWinning(contract, defender);
+  //   await mineBlocks(250);
+  //   await cannotClaimWinning(contract, defender);
+  //   await cannotClaimWinning(contract, challenger);
+  //   await cannotClaimWinning(contract, bystander);
+  // });
 
-  it("Should not be able to claim winning if abandoned #4 claim", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
-    await defend(contract, defender, x`1`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "1");
-    await expectWinner(contract, defender);
+  // it("Should not be able to claim winning if abandoned #4 claim", async function () {
+  //   await init(contract, defender);
+  //   await challenge(contract, challenger, x`1`);
+  //   await defend(contract, defender, x`1`);
+  //   await revealChallenge(contract, challenger, "1");
+  //   await revealDefend(contract, defender, "1");
+  //   await expectWinner(contract, defender);
 
-    await mineBlocks(250);
-    await cannotClaimWinning(contract, defender);
-    await cannotClaimWinning(contract, challenger);
-    await cannotClaimWinning(contract, bystander);
-  });
+  //   await mineBlocks(250);
+  //   await cannotClaimWinning(contract, defender);
+  //   await cannotClaimWinning(contract, challenger);
+  //   await cannotClaimWinning(contract, bystander);
+  // });
 
   // Once win, the winner is the winner
 
@@ -254,4 +254,8 @@ describe("GuessWhat", function () {
 
   //   await expectPlayers(contract, challenger, nobody);
   // });
+
+  // TODO: claimWinning if there's no defender
+  // TODO: forwarders
+  // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
 });

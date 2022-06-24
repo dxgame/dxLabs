@@ -37,7 +37,8 @@
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"GitHub.vscode-pull-request-github",
-				"JuanBlanco.solidity"
+				"JuanBlanco.solidity",
+				"dbaeumer.vscode-eslint"
 			]
 		}
 	},
