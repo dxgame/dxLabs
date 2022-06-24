@@ -67,6 +67,10 @@ library GameLib {
         return game.states.length == 0;
     }
 
+    function _isFull(Game storage game) private view returns (bool) {
+        return (game.MAX_STATES != 0) && (game.states.length == game.MAX_STATES);
+    }
+
     function _lastState(Game storage game) private view returns (StateLib.State storage){
         return game.states[game.states.length - 1];
     }
@@ -98,7 +102,8 @@ library GameLib {
     }
 
     function _noResponse(Game storage game) private view returns (bool) {
-        return (block.number > game.nextMoveDeadline)
+        return !_isFull(game)
+            && (block.number > game.nextMoveDeadline)
             && (block.number <= game.noResponseSoClaimWinningDeadline);
     }
 
@@ -135,7 +140,7 @@ library GameLib {
     }
 
     modifier validNewState(Game storage game, StateLib.State memory state) {
-        require(game.states.length < game.MAX_STATES, "GuessWhat: states overflow");
+        require(!_isFull(game), "GuessWhat: states overflow");
         state.verifySignature();
         _verifyChain(game, state);
         _;
