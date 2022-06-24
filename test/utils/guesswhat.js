@@ -6,7 +6,8 @@ const { tx, x, HashZero, nobody } = require("./common");
 const wrong = {
   you: "GuessWhat: not for you now",
   move: "GuessWhat: move not allowed",
-  notWinner: "GuessWhat: you not winner",
+  winning: "GuessWhat: nobody winning",
+  playing: "GuessWhat: somebody playing",
 };
 
 const msg = {
@@ -50,7 +51,12 @@ async function getUpdateStateEventArgs(contract, player, step) {
 
 async function getStartEventArgs(contract, player) {
   const game = await contract.game();
-  return [game.id, game.round + 1, player.address, await contract.defender()];
+  return [
+    game.id,
+    game.round.add(1),
+    player.address,
+    await contract.defender(),
+  ];
 }
 
 async function getWinningEventArgs(contract, winner) {
@@ -121,7 +127,7 @@ async function expectWinner(contract, winner) {
 }
 
 async function cannotClaimWinning(contract, player) {
-  return moveNotAllowed(contract, player, "claimWinning", wrong.notWinner);
+  return moveNotAllowed(contract, player, "claimWinning", wrong.winning);
 }
 
 module.exports = {

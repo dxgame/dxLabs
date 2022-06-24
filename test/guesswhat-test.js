@@ -40,7 +40,7 @@ describe("GuessWhat", function () {
     await init(contract, defender);
     await challenge(contract, challenger);
     await expectPlayers(contract, defender, challenger);
-    await moveNotAllowed(contract, bystander, "challenge");
+    await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
   });
 
   it("Should be able to defend with a challenge in effect", async function () {
@@ -87,17 +87,6 @@ describe("GuessWhat", function () {
     await expectPlayers(contract, defender, nobody);
   });
 
-  it("Should not be able to claim winning if challenger loses", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
-    await defend(contract, defender, x`1`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "1");
-
-    await expectWinner(contract, defender);
-    await cannotClaimWinning(contract, challenger);
-  });
-
   it("Should be able to claim winning if challenger wins", async function () {
     await init(contract, defender);
     await challenge(contract, challenger, x`1`);
@@ -108,39 +97,6 @@ describe("GuessWhat", function () {
     await expectWinner(contract, challenger);
     await claimWinning(contract, challenger);
     await expectPlayers(contract, challenger, nobody);
-  });
-
-  it("Should not be able to claim winning if defender loses", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
-    await defend(contract, defender, x`0`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "0");
-
-    await expectWinner(contract, challenger);
-    await cannotClaimWinning(contract, bystander);
-  });
-
-  it("Should not be able to claim winning if you are bystander #1 challenger wins", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
-    await defend(contract, defender, x`0`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "0");
-
-    await expectWinner(contract, challenger);
-    await cannotClaimWinning(contract, bystander);
-  });
-
-  it("Should not be able to claim winning if you are bystander #2 defender wins", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, x`1`);
-    await defend(contract, defender, x`1`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "1");
-
-    await expectWinner(contract, defender);
-    await cannotClaimWinning(contract, bystander);
   });
 
   it("Should be able to claim winning if defender did not response #1 defend", async function () {
@@ -180,6 +136,17 @@ describe("GuessWhat", function () {
     await claimWinning(contract, defender);
 
     await expectPlayers(contract, defender, nobody);
+  });
+
+  it("Should be able to start a new game after last game settled", async function () {
+    await init(contract, defender);
+    await challenge(contract, challenger, x`1`);
+    await defend(contract, defender, x`0`);
+    await revealChallenge(contract, challenger, "1");
+    await revealDefend(contract, defender, "0");
+
+    await challenge(contract, bystander);
+    await expectPlayers(contract, challenger, bystander);
   });
 
   // Once win, the winner is the winner

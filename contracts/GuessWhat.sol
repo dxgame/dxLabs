@@ -97,9 +97,14 @@ contract GuessWhat is Ownable, ERC20 {
         _;
     }
 
+    modifier challengeable() {
+        require(game.isEmpty() || game.noResponse() || game.isFull(), "GuessWhat: somebody playing");
+        _;
+    }
+
     function challenge(
         bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
-    ) external nextMoveIs(Step.ONE_ChallengeStarted) {
+    ) external challengeable {
         game.start(
             StateLib.State(prehash, player, encryptedRequest, v, r, s),
             game.winner

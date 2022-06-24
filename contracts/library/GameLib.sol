@@ -59,12 +59,16 @@ library GameLib {
         return game.winner;
     }
 
-    function _isEmpty(Game storage game) private view returns (bool) {
+    function isEmpty(Game storage game) public view returns (bool) {
         return game.states.length == 0;
     }
 
-    function _isFull(Game storage game) private view returns (bool) {
+    function isFull(Game storage game) public view returns (bool) {
         return (game.MAX_STATES != 0) && (game.states.length == game.MAX_STATES);
+    }
+
+    function isInProgress(Game storage game) public view returns(bool) {
+        return !isEmpty(game) && !isFull(game);
     }
 
     function _lastState(Game storage game) private view returns (StateLib.State storage){
@@ -91,24 +95,23 @@ library GameLib {
     }
 
     function _verifyChain(Game storage game, StateLib.State memory state) private view {
-        if (_isEmpty(game)) return;
+        if (isEmpty(game)) return;
 
         require(nextPlayer(game) == state.player, "GuessWhat: not for you now");
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
     }
 
-    function _noResponse(Game storage game) private view returns (bool) {
-        return !_isFull(game)
-            && (block.number > game.nextMoveDeadline);
+    function noResponse(Game storage game) public view returns (bool) {
+        return isInProgress(game) && (block.number > game.nextMoveDeadline);
     }
 
     modifier empty(Game storage game) {
-        require(_isEmpty(game), "GuessWhat: game already started");
+        require(isEmpty(game), "GuessWhat: game already started");
         _;
     }
 
     modifier notEmpty(Game storage game) {
-        require(!_isEmpty(game), "GuessWhat: game not started");
+        require(!isEmpty(game), "GuessWhat: game not started");
         _;
     }
 
@@ -122,14 +125,9 @@ library GameLib {
         _;
     }
 
-    modifier noResponse(Game storage game, address winner) {
-        require(block.number > game.nextMoveDeadline, "GuessWhat: you are too early");
-        require(_lastPlayer(game) == winner, "GuessWhat: you not winner");
-        _;
-    }
-
     modifier validNewState(Game storage game, StateLib.State memory state) {
-        require(!_isFull(game), "GuessWhat: states overflow");
+        require(!
+isFull(game), "GuessWhat: states overflow");
         state.verifySignature();
         _verifyChain(game, state);
         _;
@@ -176,12 +174,11 @@ library GameLib {
         function (Game storage) returns (address) whoWins
     ) private {
         address winner = whoWins(game);
-        require(winner == state.player, "GuessWhat: you not winner");
-        _announceWinning(game, state.player);
+        _announceWinning(game, winner);
         _reset(game, state.player);
     }
 
-    function _claimWinningBczNoResponse(Game storage game, StateLib.State memory state) private noResponse(game, state.player) {
+    function _claimWinningBczNoResponse(Game storage game, StateLib.State memory state) private {
         _announceWinning(game, state.player);
         _reset(game, state.player);
     }
@@ -204,7 +201,7 @@ library GameLib {
     }
 
     function lastStateHash(Game storage game) internal view returns (bytes32) {
-        if (!_isEmpty(game)) {
+        if (!isEmpty(game)) {
             return _lastState(game).getHash();
         }
         return blockhash(block.number - 1);
@@ -219,10 +216,18 @@ library GameLib {
         game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
     }
 
-    function start(Game storage game, StateLib.State memory state, address _defender) internal {
-        if (_isFull(game)) {
-            _reset(game, state.player);
+    function start(
+        Game storage game,
+        StateLib.State memory state,
+        address _defender,
+        function (Game storage) returns (address) whoWins
+    ) internal {
+        require(!isInProgress(game), "GuessWhat: game in process!");
+
+        if (isFull(game)) {
+            _claimWinning(game, state, whoWins);
         }
+
         _start(game, state, _defender);
     }
 
@@ -241,8 +246,16 @@ library GameLib {
         state.verifySignature();
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
 
-        return _noResponse(game)
-            ? _claimWinningBczNoResponse(game, state)
-            : _claimWinning(game, state, whoWins);
+        if (noResponse(game)) {
+            _claimWinningBczNoResponse(game, state);
+            return;
+        }
+
+        if (isFull(game)) {
+            _claimWinning(game, state, whoWins);
+            return;
+        }
+
+        revert("GuessWhat: nobody winning");
     }
 }
