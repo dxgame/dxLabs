@@ -217,7 +217,7 @@ library GameLib {
         uint256 maxStates,
         uint256 maxBlocksPerMove
     ) internal {
-        game.AUTO_WIN_AT_LAST_MOVE = autoWinAtLastMove;
+        game.AUTO_WIN_AT_LAST_MOVE = autoWinAtLastMove; //TODO: always true, win without claiming
         game.MAX_STATES = maxStates;
         game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
     }
