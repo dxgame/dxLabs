@@ -76,11 +76,7 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to claim winning if defender wins", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender, x`1`);
-    await defend(contract, defender, x`1`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "1");
+    await fight(contract, [challenger, defender], [x`1c`, x`1d`, `1c`, `1d`]);
 
     await expectWinner(contract, defender);
     await claimWinning(contract, defender);
@@ -88,11 +84,7 @@ describe("GuessWhat", function () {
   });
 
   it("Should be able to claim winning if challenger wins", async function () {
-    await init(contract, defender);
-    await challenge(contract, challenger, defender, x`1`);
-    await defend(contract, defender, x`0`);
-    await revealChallenge(contract, challenger, "1");
-    await revealDefend(contract, defender, "0");
+    await fight(contract, [challenger, defender], [x`1c`, x`0d`, `1c`, `0d`]);
 
     await expectWinner(contract, challenger);
     await claimWinning(contract, challenger);
@@ -159,3 +151,27 @@ describe("GuessWhat", function () {
   // TODO: forwarders
   // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
 });
+
+async function fight(
+  contract,
+  [challenger, defender, bystander],
+  [challengeHash, defendHash, revealedChallenge, revealedDefend]
+) {
+  await init(contract, defender);
+
+  if (challengeHash) {
+    await challenge(contract, challenger, defender, challengeHash);
+  }
+
+  if (defendHash) {
+    await defend(contract, defender, defendHash);
+  }
+
+  if (revealedChallenge) {
+    await revealChallenge(contract, challenger, revealedChallenge);
+  }
+
+  if (revealedDefend) {
+    await revealDefend(contract, defender, revealedDefend);
+  }
+}
