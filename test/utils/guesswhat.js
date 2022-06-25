@@ -8,6 +8,7 @@ const wrong = {
   move: "GuessWhat: move not allowed",
   winning: "GuessWhat: nobody winning",
   playing: "GuessWhat: somebody playing",
+  signature: "GuessWhat: signature not right",
 };
 
 const msg = {
@@ -69,11 +70,39 @@ async function expectNoPlayers(contract) {
   expect(await contract.challenger()).to.equal(nobody.address);
 }
 
-async function move(contract, player, action, args = {}) {
+async function move(contract, player, action, args = {}, processParams) {
   const prevHash = args.prevHash || (await contract.lastStateHash());
-  const params = await StateLib.getParams({ player, prevHash, ...args });
+  let params = await StateLib.getParams({ player, prevHash, ...args });
+  params = processParams ? processParams(params) : params;
   const forwarder = contract.__god_forbid__forwarder || player;
   return contract.connect(forwarder)[action](...params);
+}
+
+async function messSign(contract, player, action, args, messFn) {
+  const [index, fn] = messFn;
+  await expect(
+    move(contract, player, action, args, (params) => {
+      params[index] = fn(params[index]);
+      return params;
+    })
+  ).to.be.revertedWith(wrong.signature);
+}
+
+async function messUpSigns(contract, player, action, args, messFns) {
+  for (const messFn of messFns) {
+    await messSign(contract, player, action, args, messFn);
+  }
+}
+
+async function failMessSignsMove(contract, player, action, args) {
+  await messUpSigns(contract, player, action, args, [
+    [0, (prevHash) => prevHash.replace(/0x./, "0xa")],
+    [1, (address) => nobody.address],
+    [2, (message) => message + "*"],
+    [3, (v) => v + 1],
+    [4, (r) => r.replace(/1/, "0")],
+    [5, (s) => s.replace(/1/, "0")],
+  ]);
 }
 
 async function init(contract, firstcomer, forwarder) {
@@ -168,6 +197,7 @@ module.exports = {
   fight,
   init,
   move,
+  failMessSignsMove,
   moveNotAllowed,
   challenge,
   defend,

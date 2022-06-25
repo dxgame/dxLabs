@@ -1,3 +1,4 @@
+const { expect } = require("chai");
 const prepare = require("./utils/prepare");
 const { N, nobody, x, mineBlocks } = require("./utils/common");
 const {
@@ -5,9 +6,10 @@ const {
   expectPlayers,
   expectNoPlayers,
   moveNotAllowed,
-
   fight,
   init,
+  move,
+  failMessSignsMove,
   challenge,
   claimWinning,
   cannotClaimWinning,
@@ -28,6 +30,20 @@ describe("GuessWhat", function () {
   // TODO: refactor this test, with groups
   describe("#0 init", async function () {
     // 1. positive flow
+    it("Should update defender with a new challenge if there's no defender", async function () {
+      await init(contract, defender);
+      await expectPlayers(contract, defender, nobody);
+    });
+
+    it("Should update defender with a new challenge if there's no defender # with forwarder", async function () {
+      await init(contract, defender, forwarder);
+      await expectPlayers(contract, defender, nobody);
+    });
+
+    it("Should fail with messed up params", async function () {
+      await failMessSignsMove(contract, defender, "challenge");
+    });
+
     // 2. revert with wrong condition
     // 3. bystander interfence
     // 4. hacking
@@ -55,16 +71,6 @@ describe("GuessWhat", function () {
 
   describe("#5 new challenge", async function () {
     it("", async function () {});
-  });
-
-  it("Should update defender with a new challenge if there's no defender", async function () {
-    await init(contract, defender);
-    await expectPlayers(contract, defender, nobody);
-  });
-
-  it("Should update defender with a new challenge if there's no defender # with forwarder", async function () {
-    await init(contract, defender, forwarder);
-    await expectPlayers(contract, defender, nobody);
   });
 
   it("Should update challenger with a new challenge if there is defender", async function () {

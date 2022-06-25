@@ -184,6 +184,8 @@ isFull(game), "GuessWhat: states overflow");
     }
 
     function _start(Game storage game, StateLib.State memory state) private empty(game) {
+        state.verifySignature();
+
         require(game.MAX_BLOCKS_PER_MOVE != 0,
             "GuessWhat: configure your game first please");
 
@@ -192,7 +194,6 @@ isFull(game), "GuessWhat: states overflow");
 
         // No winner yet, claim winning directly
         if (defender(game) == address(0)) {
-            state.verifySignature();
             _announceWinning(game, state.player);
             return;
         }
