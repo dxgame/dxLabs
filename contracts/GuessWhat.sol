@@ -88,10 +88,6 @@ contract GuessWhat is Ownable, ERC20 {
         return game.lastStateHash();
     }
 
-    function whoWins() public view returns (address) {
-        return game.whoWins();
-    }
-
     modifier nextMoveIs(Step move) {
         require(
             game.isInProgress() && Step(game.states.length) == move,

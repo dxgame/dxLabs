@@ -159,10 +159,6 @@ async function claimWinning(contract, winner, announcer) {
     .withArgs(...(await getWinningEventArgs(contract, winner, announcer)));
 }
 
-async function expectWinner(contract, winner) {
-  await expect(await contract.whoWins()).to.equal(winner.address);
-}
-
 async function fight(
   contract,
   { challenger, defender, forwarder },
@@ -204,5 +200,4 @@ module.exports = {
   revealChallenge,
   revealDefend,
   claimWinning,
-  expectWinner,
 };
