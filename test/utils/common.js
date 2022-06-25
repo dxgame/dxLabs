@@ -18,6 +18,8 @@ const mineBlocks = (n = 100, s = 1) => {
 const hashHex = (str) =>
   ethers.utils.solidityKeccak256(["string"], [str.toString()]);
 
+const messHexStr = str => str.replace(/0x.{16}/, "0x0123456789abcdef")
+
 const { HashZero, AddressZero } = ethers.constants;
 
 const nobody = { address: AddressZero };
@@ -28,6 +30,7 @@ module.exports = {
   tx,
   hashHex,
   x: hashHex,
+  messHexStr,
   HashZero,
   AddressZero,
   nobody,

@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 // eslint-disable-next-line no-unused-vars
-const { tx, x, HashZero, nobody } = require("./common");
+const { tx, x, HashZero, messHexStr, nobody } = require("./common");
 
 const wrong = {
   you: "GuessWhat: not for you now",
@@ -96,12 +96,12 @@ async function messUpSigns(contract, player, action, args, messFns) {
 
 async function failMessSignsMove(contract, player, action, args) {
   await messUpSigns(contract, player, action, args, [
-    [0, (prevHash) => prevHash.replace(/0x./, "0xa")],
+    [0, (prevHash) => messHexStr(prevHash)],
     [1, (address) => nobody.address],
     [2, (message) => message + "*"],
     [3, (v) => v + 1],
-    [4, (r) => r.replace(/1/, "0")],
-    [5, (s) => s.replace(/1/, "0")],
+    [4, (r) => messHexStr(r)],
+    [5, (s) => messHexStr(s)],
   ]);
 }
 
@@ -173,6 +173,7 @@ async function fight(
 
   if (challengeHash) {
     await challenge(contract, challenger, defender, challengeHash);
+    await expectPlayers(contract, defender, challenger);
   }
 
   if (defendHash) {

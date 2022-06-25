@@ -29,7 +29,6 @@ describe("GuessWhat", function () {
 
   // TODO: refactor this test, with groups
   describe("#0 init", async function () {
-    // 1. positive flow
     it("Should update defender with a new challenge if there's no defender", async function () {
       await init(contract, defender);
       await expectPlayers(contract, defender, nobody);
@@ -44,21 +43,51 @@ describe("GuessWhat", function () {
       await failMessSignsMove(contract, defender, "challenge");
     });
 
-    // 2. revert with wrong condition
     // 3. bystander interfence
     // 4. hacking
-    it("", async function () {
-      await init(contract, defender);
-      await expectPlayers(contract, defender, nobody);
-    });
   });
 
   describe("#1 challenge", async function () {
-    it("", async function () {});
+    it("Should update challenger with a new challenge if there is defender", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await expectPlayers(contract, defender, challenger);
+    });
+
+    it("Should fail with messed up params", async function () {
+      await init(contract, defender, forwarder);
+      await failMessSignsMove(contract, challenger, "challenge");
+    });
+
+    it("Should not allowed to challenge with a challenge in effect", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
+    });
+
+    it("Should not allowed to challenge with a defend in effect", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
+    });
+
+    it("Should not allowed to challenge with a revealedChallenge in effect", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`]);
+      await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
+    });
+
+    it("Should allowed to challenge with a revealedDefend in effect # defender won", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
+      await challenge(contract, bystander, defender, x`1b`);
+    });
+
+    it("Should allowed to challenge with a revealedDefend in effect # challenger won", async function () {
+      await fight(contract, gamers, [x`1c`, x`sd`, `1c`, `sd`]);
+      await challenge(contract, bystander, challenger, x`1b`);
+    });
   });
 
   describe("#2 defend", async function () {
-    it("", async function () {});
+    it("Should be able to defend with a challenge in effect", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+    });
   });
 
   describe("#3 reveal challenge", async function () {
@@ -71,21 +100,6 @@ describe("GuessWhat", function () {
 
   describe("#5 new challenge", async function () {
     it("", async function () {});
-  });
-
-  it("Should update challenger with a new challenge if there is defender", async function () {
-    await fight(contract, gamers, [x`1c`]);
-    await expectPlayers(contract, defender, challenger);
-  });
-
-  it("Should not allowed to challenge with a challenge in effect", async function () {
-    await fight(contract, gamers, [x`1c`]);
-    await expectPlayers(contract, defender, challenger);
-    await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
-  });
-
-  it("Should be able to defend with a challenge in effect", async function () {
-    await fight(contract, gamers, [x`1c`, x`1d`]);
   });
 
   it("Should not be able to defend without a challenge in effect", async function () {
