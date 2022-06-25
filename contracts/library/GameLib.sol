@@ -244,6 +244,7 @@ library GameLib {
         StateLib.State memory state,
         function (Game storage) returns (address) whoWins
     ) internal {
+        require(!isEmpty(game), "GuessWhat: game not started");
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
 
         if (noResponse(game)) {

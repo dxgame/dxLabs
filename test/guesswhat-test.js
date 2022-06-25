@@ -248,6 +248,25 @@ describe("GuessWhat", function () {
       await failMessSignsMove(contract, bystander, "claimWinning");
     });
 
+    it("Should fail if game not started yet", async function () {
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.noGame);
+    });
+
+    it("Should fail if game not finished yet #1 challenge", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.winning);
+    });
+
+    it("Should fail if game not finished yet #2 defend", async function () {
+      await fight(contract, gamers, [x`1c`, x`xd`]);
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.winning);
+    });
+
+    it("Should fail if game not finished yet #3 revealChallenge", async function () {
+      await fight(contract, gamers, [x`1c`, x`xd`, "1c"]);
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.winning);
+    });
+
     it("Should be able to claim winning if no response # challenge", async function () {
       await fight(contract, gamers, [x`1c`]);
       await mineBlocks(150);

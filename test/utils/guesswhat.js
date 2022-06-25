@@ -4,6 +4,7 @@ const { ethers } = require("hardhat");
 const { tx, x, HashZero, messHexStr, nobody } = require("./common");
 
 const wrong = {
+  noGame: "GuessWhat: game not started",
   you: "GuessWhat: not for you now",
   late: "GuessWhat: you are too late",
   move: "GuessWhat: move not allowed",
