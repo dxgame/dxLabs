@@ -20,7 +20,7 @@ library StateLib {
         require(ecrecover(prefixedHash, v, r, s) == state.player, "GuessWhat: signature not right");
     }
 
-    function factory(
+    function checkin(
         bytes32 prevHash, address player, string memory message,
         uint8 v, bytes32 r, bytes32 s
     ) internal pure returns (State memory) {
