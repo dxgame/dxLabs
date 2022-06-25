@@ -170,6 +170,5 @@ describe("GuessWhat", function () {
   // Challenger first, Winner first.
   // Who left the game, who forever lost
 
-  // TODO: forwarders
   // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
 });

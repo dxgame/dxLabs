@@ -126,9 +126,7 @@ library GameLib {
     }
 
     modifier validNewState(Game storage game, StateLib.State memory state) {
-        require(!
-isFull(game), "GuessWhat: states overflow");
-        state.verifySignature();
+        require(!isFull(game), "GuessWhat: states overflow");
         _verifyChain(game, state);
         _;
     }
@@ -184,8 +182,6 @@ isFull(game), "GuessWhat: states overflow");
     }
 
     function _start(Game storage game, StateLib.State memory state) private empty(game) {
-        state.verifySignature();
-
         require(game.MAX_BLOCKS_PER_MOVE != 0,
             "GuessWhat: configure your game first please");
 
@@ -246,7 +242,6 @@ isFull(game), "GuessWhat: states overflow");
         StateLib.State memory state,
         function (Game storage) returns (address) whoWins
     ) internal {
-        state.verifySignature();
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
 
         if (noResponse(game)) {
