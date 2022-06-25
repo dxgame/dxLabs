@@ -27,6 +27,10 @@ describe("GuessWhat", function () {
 
   // TODO: refactor this test, with groups
   describe("#0 init", async function () {
+    // 1. positive flow
+    // 2. revert with wrong condition
+    // 3. bystander interfence
+    // 4. hacking
     it("", async function () {
       await init(contract, defender);
       await expectPlayers(contract, defender, nobody);
