@@ -38,9 +38,6 @@ describe("GuessWhat", function () {
     it("Should fail with messed up params", async function () {
       await failMessSignsMove(contract, defender, "challenge");
     });
-
-    // 3. bystander interfence
-    // 4. hacking
   });
 
   describe("#1 challenge", async function () {
@@ -244,6 +241,11 @@ describe("GuessWhat", function () {
     it("Should be able to claim winning after game finished # challenger won", async function () {
       await fight(contract, gamers, [x`1c`, x`xd`, "1c", "xd"]);
       await claimWinning(contract, challenger, bystander);
+    });
+
+    it("Should fail with messed up params", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c", "1d"]);
+      await failMessSignsMove(contract, bystander, "claimWinning");
     });
 
     it("Should be able to claim winning if no response # challenge", async function () {
