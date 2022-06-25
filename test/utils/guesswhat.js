@@ -5,6 +5,7 @@ const { tx, x, HashZero, messHexStr, nobody } = require("./common");
 
 const wrong = {
   you: "GuessWhat: not for you now",
+  late: "GuessWhat: you are too late",
   move: "GuessWhat: move not allowed",
   winning: "GuessWhat: nobody winning",
   playing: "GuessWhat: somebody playing",

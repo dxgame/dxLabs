@@ -58,27 +58,27 @@ describe("GuessWhat", function () {
       await failMessSignsMove(contract, challenger, "challenge");
     });
 
-    it("Should not allowed to challenge with a challenge in effect", async function () {
+    it("Should not be allowed to challenge with a challenge in effect", async function () {
       await fight(contract, gamers, [x`1c`]);
       await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
     });
 
-    it("Should not allowed to challenge with a defend in effect", async function () {
+    it("Should not be allowed to challenge with a defend in effect", async function () {
       await fight(contract, gamers, [x`1c`, x`1d`]);
       await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
     });
 
-    it("Should not allowed to challenge with a revealedChallenge in effect", async function () {
+    it("Should not be allowed to challenge with a revealedChallenge in effect", async function () {
       await fight(contract, gamers, [x`1c`, x`1d`, `1c`]);
       await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
     });
 
-    it("Should allowed to challenge with a revealedDefend in effect # defender won", async function () {
+    it("Should be allowed to challenge with a revealedDefend in effect # defender won", async function () {
       await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
       await challenge(contract, bystander, defender, x`1b`);
     });
 
-    it("Should allowed to challenge with a revealedDefend in effect # challenger won", async function () {
+    it("Should be allowed to challenge with a revealedResponse in effect # challenger won", async function () {
       await fight(contract, gamers, [x`1c`, x`sd`, `1c`, `sd`]);
       await challenge(contract, bystander, challenger, x`1b`);
     });
@@ -87,6 +87,47 @@ describe("GuessWhat", function () {
   describe("#2 defend", async function () {
     it("Should be able to defend with a challenge in effect", async function () {
       await fight(contract, gamers, [x`1c`, x`1d`]);
+    });
+
+    it("Should fail with messed up params", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await failMessSignsMove(contract, defender, "defend");
+    });
+
+    it("Should fail if you are late", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await mineBlocks(150);
+      await moveNotAllowed(contract, defender, "defend", wrong.late);
+    });
+
+    it("Should fail if you are not the defender", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await moveNotAllowed(contract, bystander, "defend", wrong.you);
+    });
+
+    it("Should not be allowed to defend with a defend in effect #1 defender", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await moveNotAllowed(contract, defender, "defend", wrong.move);
+    });
+
+    it("Should not be allowed to defend with a defend in effect #2 bystander", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await moveNotAllowed(contract, bystander, "defend", wrong.move);
+    });
+
+    it("Should not be allowed to defend with a revealedChallenge in effect", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`]);
+      await moveNotAllowed(contract, bystander, "defend", wrong.move);
+    });
+
+    it("Should not be allowed to defend with a revealedDefend in effect # defender won", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
+      await moveNotAllowed(contract, bystander, "defend", wrong.move);
+    });
+
+    it("Should not be allowed to defend with a revealedResponse in effect # challenger won", async function () {
+      await fight(contract, gamers, [x`1c`, x`sd`, `1c`, `sd`]);
+      await moveNotAllowed(contract, bystander, "defend", wrong.move);
     });
   });
 
