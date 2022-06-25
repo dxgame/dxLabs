@@ -13,7 +13,7 @@ library StateLib {
         return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
     }
 
-    function verifySignature(State memory state, uint8 v, bytes32 r, bytes32 s) internal pure {
+    function verifySignature(State memory state, uint8 v, bytes32 r, bytes32 s) private pure {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 stateHash = getHash(state);
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, stateHash));
