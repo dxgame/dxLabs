@@ -137,7 +137,7 @@ async function cannotClaimWinning(contract, player) {
 
 async function fight(
   contract,
-  { challenger, defender, bystander, forwarder },
+  { challenger, defender, forwarder },
   [challengeHash, defendHash, revealedChallenge, revealedDefend]
 ) {
   await init(contract, defender, forwarder);
