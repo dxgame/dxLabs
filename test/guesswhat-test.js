@@ -250,13 +250,35 @@ describe("GuessWhat", function () {
       await fight(contract, gamers, [x`1c`, x`xd`, "1c", "xd"]);
       await claimWinning(contract, challenger, bystander);
     });
+
+    it("Should be able to claim winning if no response # challenge", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await mineBlocks(150);
+      await claimWinning(contract, challenger, bystander);
+    });
+
+    it("Should be able to claim winning if no response # defend", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await mineBlocks(150);
+      await claimWinning(contract, defender, bystander);
+    });
+
+    it("Should be able to claim winning if no response # reveal challenge", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await mineBlocks(150);
+      await claimWinning(contract, challenger, bystander);
+    });
+
+    it("Should be able to claim winning if no response after game finished # defender won", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c", "1d"]);
+      await mineBlocks(150);
+      await claimWinning(contract, defender, bystander);
+    });
+
+    it("Should be able to claim winning if no response after game finished # challenger won", async function () {
+      await fight(contract, gamers, [x`1c`, x`xd`, "1c", "xd"]);
+      await mineBlocks(150);
+      await claimWinning(contract, challenger, bystander);
+    });
   });
-
-  // Once win, the winner is the winner
-
-  // TODO: Keep the winner the winner if all states recorded
-  // Challenger first, Winner first.
-  // Who left the game, who forever lost
-
-  // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
 });

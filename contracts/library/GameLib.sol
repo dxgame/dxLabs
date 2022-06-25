@@ -29,6 +29,7 @@ library GameLib {
         uint256 id;
         uint256 round;
 
+        // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
         uint256 MAX_STATES;
         uint256 MAX_BLOCKS_PER_MOVE;
  
