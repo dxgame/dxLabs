@@ -53,7 +53,7 @@ contract GuessWhat is Ownable, ERC20 {
 
     event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
     event StartEvent(uint256 indexed id, uint256 round, address indexed challenger, address indexed defender);
-    event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
+    event WinningEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed announcer);
     event UpdateStateEvent(
         uint256 indexed id,
         uint256 round,

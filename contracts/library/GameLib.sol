@@ -41,7 +41,7 @@ library GameLib {
 
     event ResetEvent(uint256 indexed id, uint256 indexed round, address player);
     event StartEvent(uint256 indexed id, uint256 round, address indexed challenger, address indexed defender);
-    event WinningEvent(uint256 indexed id, uint256 indexed round, address indexed winner);
+    event WinningEvent(uint256 indexed id, uint256 round, address indexed winner, address indexed announcer);
     event UpdateStateEvent(
         uint256 indexed id,
         uint256 round,
@@ -154,9 +154,9 @@ library GameLib {
         );
     }
 
-    function _announceWinning(Game storage game, address winner) private {
+    function _announceWinning(Game storage game, address winner, address announcer) private {
         game.winner = winner;
-        emit WinningEvent(game.id, game.round, winner);
+        emit WinningEvent(game.id, game.round, winner, announcer);
     }
 
     function _reset(Game storage game, address player) private {
@@ -172,12 +172,13 @@ library GameLib {
         function (Game storage) returns (address) whoWins
     ) private {
         address winner = whoWins(game);
-        _announceWinning(game, winner);
+        _announceWinning(game, winner, state.player);
         _reset(game, state.player);
     }
 
     function _claimWinningBczNoResponse(Game storage game, StateLib.State memory state) private {
-        _announceWinning(game, state.player);
+        address winner = _lastPlayer(game);
+        _announceWinning(game, winner, state.player);
         _reset(game, state.player);
     }
 
@@ -190,7 +191,7 @@ library GameLib {
 
         // No winner yet, claim winning directly
         if (defender(game) == address(0)) {
-            _announceWinning(game, state.player);
+            _announceWinning(game, state.player, state.player);
             return;
         }
 

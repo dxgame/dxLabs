@@ -240,6 +240,18 @@ describe("GuessWhat", function () {
     });
   });
 
+  describe("#5 claimWinning", async function () {
+    it("Should be able to claim winning after game finished # defender won", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c", "1d"]);
+      await claimWinning(contract, defender, bystander);
+    });
+
+    it("Should be able to claim winning after game finished # challenger won", async function () {
+      await fight(contract, gamers, [x`1c`, x`xd`, "1c", "xd"]);
+      await claimWinning(contract, challenger, bystander);
+    });
+  });
+
   // Once win, the winner is the winner
 
   // TODO: Keep the winner the winner if all states recorded

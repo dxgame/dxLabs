@@ -57,9 +57,9 @@ async function getStartEventArgs(contract, player, defender) {
   return [game.id, game.round.add(1), player.address, defender.address];
 }
 
-async function getWinningEventArgs(contract, winner) {
+async function getWinningEventArgs(contract, winner, announcer = winner) {
   const game = await contract.game();
-  return [game.id, game.round, winner.address];
+  return [game.id, game.round, winner.address, announcer.address];
 }
 
 async function expectPlayers(contract, defender, challenger) {
@@ -152,10 +152,10 @@ async function revealDefend(contract, defender, message = msg.defend) {
     .withArgs(...(await getUpdateStateEventArgs(contract, defender, 4)));
 }
 
-async function claimWinning(contract, winner) {
-  await expect(move(contract, winner, "claimWinning"))
+async function claimWinning(contract, winner, announcer) {
+  await expect(move(contract, announcer, "claimWinning"))
     .to.emit(contract, "WinningEvent")
-    .withArgs(...(await getWinningEventArgs(contract, winner)));
+    .withArgs(...(await getWinningEventArgs(contract, winner, announcer)));
 }
 
 async function expectWinner(contract, winner) {
