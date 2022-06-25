@@ -4,17 +4,12 @@ const { N, nobody, x, mineBlocks } = require("./utils/common");
 const {
   wrong,
   expectPlayers,
-  expectNoPlayers,
   moveNotAllowed,
   fight,
   init,
-  move,
   failMessSignsMove,
   challenge,
   claimWinning,
-  cannotClaimWinning,
-  expectWinner,
-  defend,
 } = require("./utils/guesswhat");
 
 describe("GuessWhat", function () {
