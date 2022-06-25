@@ -7,6 +7,7 @@ const wrong = {
   you: "GuessWhat: not for you now",
   late: "GuessWhat: you are too late",
   move: "GuessWhat: move not allowed",
+  match: "GuessWhat: do not match",
   winning: "GuessWhat: nobody winning",
   playing: "GuessWhat: somebody playing",
   signature: "GuessWhat: signature not right",
@@ -118,8 +119,8 @@ async function init(contract, firstcomer, forwarder) {
     .withArgs(...(await getWinningEventArgs(contract, firstcomer)));
 }
 
-function moveNotAllowed(contract, player, action, error = wrong.move) {
-  return expect(move(contract, player, action)).to.be.revertedWith(error);
+function moveNotAllowed(contract, player, action, error = wrong.move, args) {
+  return expect(move(contract, player, action, args)).to.be.revertedWith(error);
 }
 
 async function challenge(

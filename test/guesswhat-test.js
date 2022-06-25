@@ -14,6 +14,7 @@ const {
   claimWinning,
   cannotClaimWinning,
   expectWinner,
+  defend,
 } = require("./utils/guesswhat");
 
 describe("GuessWhat", function () {
@@ -131,92 +132,112 @@ describe("GuessWhat", function () {
     });
   });
 
-  describe("#3 reveal challenge", async function () {
-    it("", async function () {});
+  describe("#3 revealChallenge", async function () {
+    it("Should be able to reveal challenge with a defend in effect", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+    });
+
+    it("Should fail with messed up params", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await failMessSignsMove(contract, challenger, "revealChallenge");
+    });
+
+    it("Should fail if you are late", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await mineBlocks(150);
+      await moveNotAllowed(
+        contract,
+        challenger,
+        "revealChallenge",
+        wrong.late,
+        { message: "1c" }
+      );
+    });
+
+    it("Should fail if you are not the challenger", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await moveNotAllowed(contract, bystander, "revealChallenge", wrong.you, {
+        message: "1c",
+      });
+    });
+
+    it("Should fail if messages do not match", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await moveNotAllowed(
+        contract,
+        bystander,
+        "revealChallenge",
+        wrong.match,
+        {
+          message: "1",
+        }
+      );
+    });
+
+    it("Should not be allowed to reveal with a reveal in effect #1 challenger", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await moveNotAllowed(contract, challenger, "revealChallenge", wrong.move);
+    });
+
+    it("Should not be allowed to reveal with a reveal in effect #2 bystander", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await moveNotAllowed(contract, bystander, "revealChallenge", wrong.move);
+    });
+
+    it("Should not be allowed to reveal if game finished # defender won", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
+      await moveNotAllowed(contract, challenger, "revealChallenge", wrong.move);
+    });
+
+    it("Should not be allowed to reveal if game finished # challenger won", async function () {
+      await fight(contract, gamers, [x`1c`, x`xd`, `1c`, `xd`]);
+      await moveNotAllowed(contract, challenger, "revealChallenge", wrong.move);
+    });
   });
 
-  describe("#4 reveal defend", async function () {
-    it("", async function () {});
-  });
+  describe("#4 revealDefend", async function () {
+    it("Should be able to reveal defend with a revealed challenge in effect", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c", "1d"]);
+    });
 
-  describe("#5 new challenge", async function () {
-    it("", async function () {});
-  });
+    it("Should fail with messed up params", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await failMessSignsMove(contract, defender, "revealDefend", {
+        message: "1d",
+      });
+    });
 
-  it("Should not be able to defend without a challenge in effect", async function () {
-    await expectNoPlayers(contract);
-    await moveNotAllowed(contract, defender, "defend");
+    it("Should fail if you are late", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await mineBlocks(150);
+      await moveNotAllowed(contract, defender, "revealDefend", wrong.late, {
+        message: "1d",
+      });
+    });
 
-    await init(contract, defender);
-    await moveNotAllowed(contract, defender, "defend");
+    it("Should fail if you are not the defender", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await moveNotAllowed(contract, bystander, "revealDefend", wrong.you, {
+        message: "1d",
+      });
+    });
 
-    await challenge(contract, challenger, defender);
-    await moveNotAllowed(contract, bystander, "defend", wrong.you);
-  });
+    it("Should fail if messages do not match", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, "1c"]);
+      await moveNotAllowed(contract, defender, "revealDefend", wrong.match, {
+        message: "1x",
+      });
+    });
 
-  it("Should be able to reveal challenge with defend in effect", async function () {
-    await fight(contract, gamers, [x`1c`, x`1d`, `1c`]);
-  });
+    it("Should not be allowed to reveal if game finished # defender won", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
+      await moveNotAllowed(contract, defender, "revealDefend", wrong.move);
+    });
 
-  it("Should be able to reveal defend with revealed challenge", async function () {
-    await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
-  });
-
-  it("Should be able to claim winning if defender wins", async function () {
-    await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
-
-    await expectWinner(contract, defender);
-    await claimWinning(contract, defender);
-    await expectPlayers(contract, defender, nobody);
-  });
-
-  it("Should be able to claim winning if challenger wins", async function () {
-    await fight(contract, gamers, [x`1c`, x`0d`, `1c`, `0d`]);
-
-    await expectWinner(contract, challenger);
-    await claimWinning(contract, challenger);
-    await expectPlayers(contract, challenger, nobody);
-  });
-
-  it("Should be able to claim winning if defender did not response #1 defend", async function () {
-    await fight(contract, gamers, [x`1c`]);
-    await expectWinner(contract, nobody);
-
-    await cannotClaimWinning(contract, challenger);
-    await mineBlocks(150);
-    await claimWinning(contract, challenger);
-
-    await expectPlayers(contract, challenger, nobody);
-  });
-
-  it("Should be able to claim winning if defender did not response #1 reveal", async function () {
-    await fight(contract, gamers, [x`1c`, x`1d`, `1c`]);
-    await expectWinner(contract, nobody);
-
-    await cannotClaimWinning(contract, challenger);
-    await mineBlocks(150);
-    await claimWinning(contract, challenger);
-
-    await expectPlayers(contract, challenger, nobody);
-  });
-
-  it("Should be able to claim winning if challenger did not response #2 reveal", async function () {
-    await fight(contract, gamers, [x`1c`, x`1d`]);
-    await expectWinner(contract, nobody);
-
-    await cannotClaimWinning(contract, defender);
-    await mineBlocks(150);
-    await claimWinning(contract, defender);
-
-    await expectPlayers(contract, defender, nobody);
-  });
-
-  it("Should be able to start a new game after last game settled", async function () {
-    await fight(contract, gamers, [x`1c`, x`0d`, `1c`, `0d`]);
-
-    await expectWinner(contract, challenger);
-    await challenge(contract, bystander, challenger);
-    await expectPlayers(contract, challenger, bystander);
+    it("Should not be allowed to reveal if game finished # challenger won", async function () {
+      await fight(contract, gamers, [x`1c`, x`xd`, `1c`, `xd`]);
+      await moveNotAllowed(contract, defender, "revealDefend", wrong.move);
+    });
   });
 
   // Once win, the winner is the winner
