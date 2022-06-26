@@ -220,7 +220,7 @@ library GameLib {
         StateLib.State memory state,
         function (Game storage) returns (address) whoWins
     ) internal {
-        require(!isInProgress(game), "GuessWhat: game in process!");
+        require(!isPlaying(game), "GuessWhat: someone playing");
 
         if (isFull(game)) {
             claimWinning(game, state, whoWins);
@@ -244,7 +244,7 @@ library GameLib {
         function (Game storage) returns (address) whoWins
     ) internal notEmpty(game) {
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
-        require(notPlaying(game), "GuessWhat: nobody winning");
+        require(notPlaying(game), "GuessWhat: someone playing");
 
         address winner = noResponse(game) ? _lastPlayer(game) : whoWins(game);
         _announceWinning(game, winner, state.player);

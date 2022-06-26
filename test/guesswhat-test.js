@@ -66,6 +66,24 @@ describe("GuessWhat", function () {
       await moveNotAllowed(contract, bystander, "challenge", wrong.playing);
     });
 
+    it("Should be allowed to challenge with last game no response # challenge", async function () {
+      await fight(contract, gamers, [x`1c`]);
+      await mineBlocks(150);
+      await challenge(contract, bystander, challenger, x`1b`);
+    });
+
+    it("Should be allowed to challenge with last game no response # defend", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`]);
+      await mineBlocks(150);
+      await challenge(contract, bystander, defender, x`1b`);
+    });
+
+    it("Should be allowed to challenge with last game no response # revealedChallenge", async function () {
+      await fight(contract, gamers, [x`1c`, x`1d`, `1c`]);
+      await mineBlocks(150);
+      await challenge(contract, bystander, challenger, x`1b`);
+    });
+
     it("Should be allowed to challenge with a revealedDefend in effect # defender won", async function () {
       await fight(contract, gamers, [x`1c`, x`1d`, `1c`, `1d`]);
       await challenge(contract, bystander, defender, x`1b`);
@@ -254,17 +272,17 @@ describe("GuessWhat", function () {
 
     it("Should fail if game not finished yet #1 challenge", async function () {
       await fight(contract, gamers, [x`1c`]);
-      await moveNotAllowed(contract, bystander, "claimWinning", wrong.winning);
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.playing);
     });
 
     it("Should fail if game not finished yet #2 defend", async function () {
       await fight(contract, gamers, [x`1c`, x`xd`]);
-      await moveNotAllowed(contract, bystander, "claimWinning", wrong.winning);
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.playing);
     });
 
     it("Should fail if game not finished yet #3 revealChallenge", async function () {
       await fight(contract, gamers, [x`1c`, x`xd`, "1c"]);
-      await moveNotAllowed(contract, bystander, "claimWinning", wrong.winning);
+      await moveNotAllowed(contract, bystander, "claimWinning", wrong.playing);
     });
 
     it("Should be able to claim winning if no response # challenge", async function () {
