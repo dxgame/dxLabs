@@ -242,7 +242,7 @@ library GameLib {
     function play(
         Game storage game,
         StateLib.State memory state
-    ) internal notEmpty(game) {
+    ) internal {
         require(isPlaying(game), "GuessWhat: move not allowed");
         _pushState(game, state);
     }
