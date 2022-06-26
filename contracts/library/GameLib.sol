@@ -91,7 +91,7 @@ library GameLib {
         return _lastState(game).player;
     }
 
-    function _nextPlayer(Game storage game, address player) private view returns (address) {
+    function opponent(Game storage game, address player) internal view returns (address) {
         if (game.players[0] == player) return game.players[1];
         if (game.players[1] == player) return game.players[0];
         return address(0);
@@ -99,16 +99,12 @@ library GameLib {
 
     function nextPlayer(Game storage game) internal view returns (address) {
         address player = _lastPlayer(game);
-        return _nextPlayer(game, player);
+        return opponent(game, player);
     }
 
     function nextMoveIndex(Game storage game) internal beforeDeadline(game) view returns (uint256) {
         require(isPlaying(game), "GuessWhat: move not allowed");
         return game.states.length;
-    }
-
-    function opponent(Game storage game, address player) internal view returns (address) {
-        return _nextPlayer(game, player);
     }
 
     function _verifyChain(Game storage game, StateLib.State memory state) private view {
@@ -178,7 +174,7 @@ library GameLib {
             game.round,
             game.states.length,
             state.player,
-            _nextPlayer(game, state.player),
+            opponent(game, state.player),
             game.nextMoveDeadline
         );
     }
