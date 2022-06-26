@@ -103,7 +103,7 @@ library GameLib {
     }
 
     function nextMoveIndex(Game storage game) internal beforeDeadline(game) view returns (uint256) {
-        require(isHalfway(game), "GuessWhat: move not allowed");
+        require(isPlaying(game), "GuessWhat: move not allowed");
         return game.states.length;
     }
 
@@ -195,7 +195,6 @@ library GameLib {
         emit ResetEvent(game.id, game.round, player);
     }
 
-
     function _start(Game storage game, StateLib.State memory state) private empty(game) {
         require(game.MAX_BLOCKS_PER_MOVE != 0, "GuessWhat: configure your game first please");
 
@@ -244,6 +243,7 @@ library GameLib {
         Game storage game,
         StateLib.State memory state
     ) internal notEmpty(game) {
+        require(isPlaying(game), "GuessWhat: move not allowed");
         _pushState(game, state);
     }
 
