@@ -188,8 +188,7 @@ library GameLib {
 
 
     function _start(Game storage game, StateLib.State memory state) private empty(game) {
-        require(game.MAX_BLOCKS_PER_MOVE != 0,
-            "GuessWhat: configure your game first please");
+        require(game.MAX_BLOCKS_PER_MOVE != 0, "GuessWhat: configure your game first please");
 
         address _defender = defender(game);
         require(state.player != _defender, "GuessWhat: you are so ducking boring");
