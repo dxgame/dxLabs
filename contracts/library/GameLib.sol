@@ -56,6 +56,13 @@ library GameLib {
         return game.players[0];
     }
 
+    // function whoWon(
+    //     Game storage game, 
+    //     function (Game storage) returns (address) whoWins
+    // ) internal view returns (address) {
+    //     return game.winner;
+    // }
+
     function defender(Game storage game) public view returns (address) {
         return game.winner;
     }
@@ -104,6 +111,14 @@ library GameLib {
 
     function noResponse(Game storage game) public view returns (bool) {
         return isInProgress(game) && (block.number > game.nextMoveDeadline);
+    }
+
+    function isPlaying(Game storage game) public view returns(bool) {
+        return isInProgress(game) && (block.number <= game.nextMoveDeadline);
+    }
+
+    function notPlaying(Game storage game) public view returns(bool) {
+        return !isPlaying(game);
     }
 
     modifier empty(Game storage game) {
@@ -167,21 +182,6 @@ library GameLib {
         emit ResetEvent(game.id, game.round, player);
     }
 
-    function _claimWinning(
-        Game storage game,
-        StateLib.State memory state,
-        function (Game storage) returns (address) whoWins
-    ) private {
-        address winner = whoWins(game);
-        _announceWinning(game, winner, state.player);
-        _reset(game, state.player);
-    }
-
-    function _claimWinningBczNoResponse(Game storage game, StateLib.State memory state) private {
-        address winner = _lastPlayer(game);
-        _announceWinning(game, winner, state.player);
-        _reset(game, state.player);
-    }
 
     function _start(Game storage game, StateLib.State memory state) private empty(game) {
         require(game.MAX_BLOCKS_PER_MOVE != 0,
@@ -226,7 +226,7 @@ library GameLib {
         require(!isInProgress(game), "GuessWhat: game in process!");
 
         if (isFull(game)) {
-            _claimWinning(game, state, whoWins);
+            _claimWinning(game, state.player, whoWins);
         }
 
         _start(game, state);
@@ -243,20 +243,13 @@ library GameLib {
         Game storage game,
         StateLib.State memory state,
         function (Game storage) returns (address) whoWins
-    ) internal {
-        require(!isEmpty(game), "GuessWhat: game not started");
+    ) internal notEmpty(game) {
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
+        require(notPlaying(game), "GuessWhat: nobody winning");
 
-        if (noResponse(game)) {
-            _claimWinningBczNoResponse(game, state);
-            return;
-        }
+        address winner = noResponse(game) ? _lastPlayer(game) : whoWins(game);
 
-        if (isFull(game)) {
-            _claimWinning(game, state, whoWins);
-            return;
-        }
-
-        revert("GuessWhat: nobody winning");
+        _announceWinning(game, winner, state.player);
+        _reset(game, state.player);
     }
 }
