@@ -22,7 +22,6 @@ describe("GuessWhat", function () {
     gamers = { deployer, defender, challenger, bystander, forwarder };
   });
 
-  // TODO: refactor this test, with groups
   describe("#0 init", async function () {
     it("Should update defender with a new challenge if there's no defender", async function () {
       await init(contract, defender);
