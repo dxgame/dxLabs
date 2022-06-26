@@ -248,7 +248,6 @@ library GameLib {
         require(notPlaying(game), "GuessWhat: nobody winning");
 
         address winner = noResponse(game) ? _lastPlayer(game) : whoWins(game);
-
         _announceWinning(game, winner, state.player);
         _reset(game, state.player);
     }
