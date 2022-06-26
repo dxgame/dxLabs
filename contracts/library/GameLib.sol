@@ -67,6 +67,10 @@ library GameLib {
         return game.winner;
     }
 
+    function noDefender(Game storage game) public view returns (bool) {
+        return defender(game) == address(0);
+    }
+
     function isEmpty(Game storage game) public view returns (bool) {
         return game.states.length == 0;
     }
@@ -190,12 +194,6 @@ library GameLib {
         address _defender = defender(game);
         require(state.player != _defender, "GuessWhat: you are so ducking boring");
 
-        // No winner yet, claim winning directly
-        if (defender(game) == address(0)) {
-            _announceWinning(game, state.player, state.player);
-            return;
-        }
-
         game.round++;
         _setPlayers(game, state.player, _defender);
         _pushState(game, state);
@@ -226,10 +224,12 @@ library GameLib {
         require(!isInProgress(game), "GuessWhat: game in process!");
 
         if (isFull(game)) {
-            _claimWinning(game, state.player, whoWins);
+            claimWinning(game, state, whoWins);
         }
 
-        _start(game, state);
+        noDefender(game)
+            ? _announceWinning(game, state.player, state.player)
+            : _start(game, state);
     }
 
     function play(
