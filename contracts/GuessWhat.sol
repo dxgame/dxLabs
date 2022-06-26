@@ -88,10 +88,7 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     modifier nextMoveIs(Step move) {
-        require(
-            game.isInProgress() && Step(game.states.length) == move,
-            "GuessWhat: move not allowed"
-        );
+        require(Step(game.nextMoveIndex()) == move, "GuessWhat: move not allowed");
         _;
     }
 

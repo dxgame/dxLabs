@@ -1,4 +1,3 @@
-const { expect } = require("chai");
 const prepare = require("./utils/prepare");
 const { N, nobody, x, mineBlocks } = require("./utils/common");
 const {
