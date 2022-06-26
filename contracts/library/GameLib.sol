@@ -211,7 +211,7 @@ library GameLib {
         if (!isEmpty(game)) {
             return _lastState(game).getHash();
         }
-        return blockhash(block.number - 1);
+        return keccak256(abi.encodePacked(blockhash(block.number - 1), game.id, game.round));
     }
 
     function config(
