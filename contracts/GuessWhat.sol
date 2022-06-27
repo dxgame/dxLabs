@@ -80,7 +80,7 @@ contract GuessWhat is Ownable, ERC20, GameLib {
     function challenge(
         bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
     ) external challengeable {
-        State memory state = StateLib.checkin(prehash, player, encryptedRequest, v, r, s);
+        State memory state = stateCheckIn(prehash, player, encryptedRequest, v, r, s);
 
         startGame(game, state);
     }
@@ -88,7 +88,7 @@ contract GuessWhat is Ownable, ERC20, GameLib {
     function defend(
         bytes32 prehash, address player, string memory encryptedResponse, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.TWO_DefenderDefended) {
-        State memory state = StateLib.checkin(prehash, player, encryptedResponse, v, r, s);
+        State memory state = stateCheckIn(prehash, player, encryptedResponse, v, r, s);
 
         playGame(game, state);
     }
@@ -96,7 +96,7 @@ contract GuessWhat is Ownable, ERC20, GameLib {
     function revealChallenge(
         bytes32 prehash, address player, string memory revealedRequest, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
-        State memory state = StateLib.checkin(prehash, player, revealedRequest, v, r, s);
+        State memory state = stateCheckIn(prehash, player, revealedRequest, v, r, s);
 
         require(
             strEqual(game.states[0].message, hashHex(revealedRequest)),
@@ -108,7 +108,7 @@ contract GuessWhat is Ownable, ERC20, GameLib {
     function revealDefend(
         bytes32 prehash, address player, string memory revealedResponse, uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.FOUR_DefenderRevealed) {
-        State memory state = StateLib.checkin(prehash, player, revealedResponse, v, r, s);
+        State memory state = stateCheckIn(prehash, player, revealedResponse, v, r, s);
 
         require(
             strEqual(game.states[1].message, hashHex(revealedResponse)),
@@ -120,7 +120,7 @@ contract GuessWhat is Ownable, ERC20, GameLib {
     function claimWinning(
         bytes32 prehash, address player, string memory message, uint8 v, bytes32 r, bytes32 s
     ) external {
-        State memory state = StateLib.checkin(prehash, player, message, v, r, s);
+        State memory state = stateCheckIn(prehash, player, message, v, r, s);
 
         claimWinningGame(game, state);
     }

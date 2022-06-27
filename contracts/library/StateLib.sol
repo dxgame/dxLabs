@@ -13,14 +13,7 @@ contract StateLib {
         return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
     }
 
-    function verifySignature(State memory state, uint8 v, bytes32 r, bytes32 s) private pure {
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 stateHash = getStateHash(state);
-        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, stateHash));
-        require(ecrecover(prefixedHash, v, r, s) == state.player, "GuessWhat: signature not right");
-    }
-
-    function checkin(
+    function stateCheckIn(
         bytes32 prevHash, address player, string memory message,
         uint8 v, bytes32 r, bytes32 s
     ) internal pure returns (State memory) {
@@ -29,8 +22,15 @@ contract StateLib {
         state.player = player;
         state.message = message;
 
-        verifySignature(state, v, r, s);
+        _verifySignature(state, v, r, s);
 
         return state;
+    }
+
+    function _verifySignature(State memory state, uint8 v, bytes32 r, bytes32 s) private pure {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 stateHash = getStateHash(state);
+        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, stateHash));
+        require(ecrecover(prefixedHash, v, r, s) == state.player, "GuessWhat: signature not right");
     }
 }
