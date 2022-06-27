@@ -5,8 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./common/StateManager.sol";
-import "./common/GameManager.sol";
+import "./common/SingleGameManager.sol";
 
 function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
@@ -20,9 +19,7 @@ function strEqual(string memory a, string memory b) pure returns (bool) {
     return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
 }
 
-contract GuessWhat is Ownable, ERC20, GameManager {
-    Game public game;
-
+contract GuessWhat is Ownable, ERC20, SingleGameManager {
     enum Step {
         ONE_ChallengeStarted,
         TWO_DefenderDefended,
@@ -36,50 +33,9 @@ contract GuessWhat is Ownable, ERC20, GameManager {
         game.MAX_BLOCKS_PER_MOVE = 100;
     }
 
-    function whoWins(Game storage _game) override internal view returns (address) {
-        require(_game.states.length > 0, "GuessWhat: _game not started");
-
-        if (!isGameFinished(_game)) return address(0);
-
-        string memory revealedRequest = _game.states[2].message;
-        string memory revealedResponse = _game.states[3].message;
-        return isOne(revealedResponse) == isOne(revealedRequest) ? getGameDefender(_game) : getGameChallenger(game);
-    }
-
-    // TODO: replace with better name
-    function challenger() public view returns (address) {
-        return getGameChallenger(game);
-    }
-
-    function defender() public view returns (address) {
-        return getGameDefender(game);
-    }
-
-    function nextPlayer() public view returns (address) {
-        return getGameNextPlayer(game);
-    }
-
-    function opponent(address player) public view returns (address) {
-        return getGameOpponent(game, player);
-    }
-
-    function lastStateHash() public view returns (bytes32) {
-        return getGameLastStateHash(game);
-    }
-
-    modifier nextMoveIs(Step move) {
-        require(Step(getGameNextMoveIndex(game)) == move, "GuessWhat: move not allowed");
-        _;
-    }
-
-    modifier challengeable() {
-        require(isGameNotStarted(game) || isGameStopped(game) || isGameFinished(game), "GuessWhat: somebody playing");
-        _;
-    }
-
     function challenge(
         bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
-    ) external challengeable {
+    ) external startable {
         State memory state = stateCheckIn(prehash, player, encryptedRequest, v, r, s);
 
         startGame(game, state);
@@ -117,11 +73,19 @@ contract GuessWhat is Ownable, ERC20, GameManager {
         playGame(game, state);
     }
 
-    function claimWinning(
-        bytes32 prehash, address player, string memory message, uint8 v, bytes32 r, bytes32 s
-    ) external {
-        State memory state = stateCheckIn(prehash, player, message, v, r, s);
+    function whoWins(Game storage _game) override internal view returns (address) {
+        require(_game.states.length > 0, "GuessWhat: _game not started");
 
-        claimWinningGame(game, state);
+        if (!isGameFinished(_game)) return address(0);
+
+        string memory revealedRequest = _game.states[2].message;
+        string memory revealedResponse = _game.states[3].message;
+        return isOne(revealedResponse) == isOne(revealedRequest) ? getGameDefender(_game) : getGameChallenger(game);
+    }
+
+
+    modifier nextMoveIs(Step move) {
+        require(Step(getGameNextMoveIndex(game)) == move, "GuessWhat: move not allowed");
+        _;
     }
 }

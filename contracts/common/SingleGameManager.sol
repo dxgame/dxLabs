@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.14;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+import "./GameManager.sol";
+
+abstract contract SingleGameManager is GameManager {
+    Game public game;
+
+    function challenger() public view returns (address) {
+        return getGameChallenger(game);
+    }
+
+    function defender() public view returns (address) {
+        return getGameDefender(game);
+    }
+
+    function nextPlayer() public view returns (address) {
+        return getGameNextPlayer(game);
+    }
+
+    function opponent(address player) public view returns (address) {
+        return getGameOpponent(game, player);
+    }
+
+    function lastStateHash() public view returns (bytes32) {
+        return getGameLastStateHash(game);
+    }
+
+    function claimWinning(
+        bytes32 prehash, address player, string memory message, uint8 v, bytes32 r, bytes32 s
+    ) external {
+        State memory state = stateCheckIn(prehash, player, message, v, r, s);
+
+        claimWinningGame(game, state);
+    }
+
+    modifier startable() {
+        require(isGameNotStarted(game) || isGameStopped(game) || isGameFinished(game), "GuessWhat: somebody playing");
+        _;
+    }
+}
