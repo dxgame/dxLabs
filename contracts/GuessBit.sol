@@ -7,6 +7,18 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "./common/SingleGameManager.sol";
 
+/*
+    step 0: ready to start
+
+    step 1: challenger starts new challenge
+    step 2: defender defends
+
+    step 3: challenger reveals
+    step 4: defender reveals
+
+    step 5: winner claims winning
+*/
+
 contract GuessBit is Ownable, ERC20, SingleGameManager {
     enum Step {
         ONE_ChallengeStarted,
@@ -16,9 +28,8 @@ contract GuessBit is Ownable, ERC20, SingleGameManager {
     }
 
     constructor(uint256 initialSupply) ERC20("GuessBit", "GSWT") {
-        _mint(msg.sender, initialSupply);
         game.MAX_STATES = 4;
-        game.MAX_BLOCKS_PER_MOVE = 100;
+        _mint(msg.sender, initialSupply);
     }
 
     function challenge(

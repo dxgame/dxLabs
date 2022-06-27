@@ -10,6 +10,10 @@ import "./GameManager.sol";
 abstract contract SingleGameManager is GameManager {
     Game public game;
 
+    constructor() {
+        game.MAX_BLOCKS_PER_MOVE = 100;
+    }
+
     function challenger() public view returns (address) {
         return getGameChallenger(game);
     }
