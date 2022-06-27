@@ -29,7 +29,6 @@ library GameLib {
         uint256 id;
         uint256 round;
 
-        // TODO: MAX_STATES == 0, infinite game, customized game ending indicator
         uint256 MAX_STATES;
         uint256 MAX_BLOCKS_PER_MOVE;
  
@@ -56,13 +55,6 @@ library GameLib {
         return game.players[0];
     }
 
-    // function whoWon(
-    //     Game storage game, 
-    //     function (Game storage) returns (address) whoWins
-    // ) internal view returns (address) {
-    //     return game.winner;
-    // }
-
     function defender(Game storage game) public view returns (address) {
         return game.winner;
     }
@@ -75,12 +67,19 @@ library GameLib {
         return game.states.length == 0;
     }
 
-    function isFull(Game storage game) public view returns (bool) {
-        return (game.MAX_STATES != 0) && (game.states.length == game.MAX_STATES);
+    function isFull(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal returns (bool) {
+        return isEnd(game)
+            || (game.MAX_STATES != 0 && game.states.length == game.MAX_STATES);
     }
 
-    function isHalfway(Game storage game) public view returns(bool) {
-        return !isEmpty(game) && !isFull(game);
+    function isHalfway(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal returns(bool) {
+        return !isEmpty(game) && !isFull(game, isEnd);
     }
 
     function _lastState(Game storage game) private view returns (StateLib.State storage){
@@ -102,8 +101,11 @@ library GameLib {
         return opponent(game, player);
     }
 
-    function nextMoveIndex(Game storage game) internal beforeDeadline(game) view returns (uint256) {
-        require(isPlaying(game), "GuessWhat: move not allowed");
+    function nextMoveIndex(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal beforeDeadline(game) returns (uint256) {
+        require(isPlaying(game, isEnd), "GuessWhat: move not allowed");
         return game.states.length;
     }
 
@@ -114,20 +116,32 @@ library GameLib {
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
     }
 
-    function noResponse(Game storage game) public view returns (bool) {
-        return isHalfway(game) && (block.number > game.nextMoveDeadline);
+    function noResponse(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal returns (bool) {
+        return isHalfway(game, isEnd) && (block.number > game.nextMoveDeadline);
     }
 
-    function isPlaying(Game storage game) public view returns(bool) {
-        return isHalfway(game) && (block.number <= game.nextMoveDeadline);
+    function isPlaying(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal returns(bool) {
+        return isHalfway(game, isEnd) && (block.number <= game.nextMoveDeadline);
     }
 
-    function notPlaying(Game storage game) public view returns(bool) {
-        return !isPlaying(game);
+    function notPlaying(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal returns(bool) {
+        return !isPlaying(game, isEnd);
     }
 
-    function stoppedPlaying(Game storage game) public view returns(bool) {
-        return noResponse(game) || isFull(game);
+    function stoppedPlaying(
+        Game storage game,
+        function (Game storage) returns (bool) isEnd
+    ) internal returns(bool) {
+        return noResponse(game, isEnd) || isFull(game, isEnd);
     }
 
     modifier empty(Game storage game) {
@@ -150,8 +164,12 @@ library GameLib {
         _;
     }
 
-    modifier validNewState(Game storage game, StateLib.State memory state) {
-        require(!isFull(game), "GuessWhat: states overflow");
+    modifier validNewState(
+        Game storage game,
+        StateLib.State memory state,
+        function (Game storage) returns (bool) isEnd    
+    ) {
+        require(!isFull(game, isEnd), "GuessWhat: states overflow");
         _verifyChain(game, state);
         _;
     }
@@ -165,7 +183,11 @@ library GameLib {
         game.nextMoveDeadline = block.number + game.MAX_BLOCKS_PER_MOVE;
     }
 
-    function _pushState(Game storage game, StateLib.State memory state) private beforeDeadline(game) validNewState(game, state) {
+    function _pushState(
+        Game storage game,
+        StateLib.State memory state,
+        function (Game storage) returns (bool) isEnd
+    ) private beforeDeadline(game) validNewState(game, state, isEnd) {
         game.states.push(state);
         _updateDeadlines(game);
 
@@ -191,7 +213,11 @@ library GameLib {
         emit ResetEvent(game.id, game.round, player);
     }
 
-    function _start(Game storage game, StateLib.State memory state) private empty(game) {
+    function _start(
+        Game storage game,
+        StateLib.State memory state,
+        function (Game storage) returns (bool) isEnd
+    ) private empty(game) {
         require(game.MAX_BLOCKS_PER_MOVE != 0, "GuessWhat: configure your game first please");
 
         address _defender = defender(game);
@@ -199,7 +225,7 @@ library GameLib {
 
         game.round++;
         _setPlayers(game, state.player, _defender);
-        _pushState(game, state);
+        _pushState(game, state, isEnd);
         emit StartEvent(game.id, game.round, state.player, _defender);
     }
 
@@ -210,48 +236,44 @@ library GameLib {
         return keccak256(abi.encodePacked(blockhash(block.number - 1), game.id, game.round));
     }
 
-    function config(
-        Game storage game,
-        uint256 maxStates,
-        uint256 maxBlocksPerMove
-    ) internal {
-        game.MAX_STATES = maxStates;
-        game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
-    }
-
     function start(
         Game storage game,
         StateLib.State memory state,
-        function (Game storage) returns (address) whoWins
+        function (Game storage) returns (address) whoWins,
+        function (Game storage) returns (bool) isEnd
     ) internal {
-        require(notPlaying(game), "GuessWhat: somebody playing");
+        require(notPlaying(game, isEnd), "GuessWhat: somebody playing");
 
-        if (stoppedPlaying(game)) {
-            claimWinning(game, state, whoWins);
+        if (stoppedPlaying(game, isEnd)) {
+            claimWinning(game, state, whoWins, isEnd);
         }
 
         noDefender(game)
             ? _announceWinning(game, state.player, state.player)
-            : _start(game, state);
+            : _start(game, state, isEnd);
     }
 
     function play(
         Game storage game,
-        StateLib.State memory state
+        StateLib.State memory state,
+        function (Game storage) returns (bool) isEnd
     ) internal {
-        require(isPlaying(game), "GuessWhat: move not allowed");
-        _pushState(game, state);
+        require(isPlaying(game, isEnd), "GuessWhat: move not allowed");
+        _pushState(game, state, isEnd);
     }
 
     function claimWinning(
         Game storage game,
         StateLib.State memory state,
-        function (Game storage) returns (address) whoWins
+        function (Game storage) returns (address) whoWins,
+        function (Game storage) returns (bool) isEnd
     ) internal notEmpty(game) {
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
-        require(stoppedPlaying(game), "GuessWhat: somebody playing");
+        require(stoppedPlaying(game, isEnd), "GuessWhat: somebody playing");
 
-        address winner = noResponse(game) ? _lastPlayer(game) : whoWins(game);
+        address winner = noResponse(game, isEnd) ? _lastPlayer(game) : whoWins(game);
+        if (winner == address(0)) revert("GuessWhat: nobody won");
+
         _announceWinning(game, winner, state.player);
         _reset(game, state.player);
     }

@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "./library/StateLib.sol";
 import "./library/GameLib.sol";
-import "hardhat/console.sol";
 
 function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
@@ -24,10 +23,14 @@ function strEqual(string memory a, string memory b) pure returns (bool) {
 library GuessWhatLib {
     using GameLib for GameLib.Game;
 
-    function whoWins(GameLib.Game storage game) internal view returns (address) {
+    function isEnd(GameLib.Game storage game) internal view returns (bool) {
+        return game.states.length == 4;
+    }
+
+    function whoWins(GameLib.Game storage game) internal returns (address) {
         require(game.states.length > 0, "GuessWhat: game not started");
 
-        if (game.states.length != game.MAX_STATES) return address(0);
+        if (!game.isFull(isEnd)) return address(0);
 
         string memory revealedRequest = game.states[2].message;
         string memory revealedResponse = game.states[3].message;
@@ -64,7 +67,8 @@ contract GuessWhat is Ownable, ERC20 {
 
     constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
         _mint(msg.sender, initialSupply);
-        game.config(4, 100);
+        // game.MAX_STATES = 4;
+        game.MAX_BLOCKS_PER_MOVE = 100;
     }
 
     function challenger() public view returns (address) {
@@ -88,12 +92,12 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     modifier nextMoveIs(Step move) {
-        require(Step(game.nextMoveIndex()) == move, "GuessWhat: move not allowed");
+        require(Step(game.nextMoveIndex(GuessWhatLib.isEnd)) == move, "GuessWhat: move not allowed");
         _;
     }
 
     modifier challengeable() {
-        require(game.isEmpty() || game.noResponse() || game.isFull(), "GuessWhat: somebody playing");
+        require(game.isEmpty() || game.noResponse(GuessWhatLib.isEnd) || game.isFull(GuessWhatLib.isEnd), "GuessWhat: somebody playing");
         _;
     }
 
@@ -102,7 +106,7 @@ contract GuessWhat is Ownable, ERC20 {
     ) external challengeable {
         StateLib.State memory state = StateLib.checkin(prehash, player, encryptedRequest, v, r, s);
 
-        game.start(state, GuessWhatLib.whoWins);
+        game.start(state, GuessWhatLib.whoWins, GuessWhatLib.isEnd);
     }
 
     function defend(
@@ -110,7 +114,7 @@ contract GuessWhat is Ownable, ERC20 {
     ) external nextMoveIs(Step.TWO_DefenderDefended) {
         StateLib.State memory state = StateLib.checkin(prehash, player, encryptedResponse, v, r, s);
 
-        game.play(state);
+        game.play(state, GuessWhatLib.isEnd);
     }
 
     function revealChallenge(
@@ -122,7 +126,7 @@ contract GuessWhat is Ownable, ERC20 {
             strEqual(game.states[0].message, hashHex(revealedRequest)),
             "GuessWhat: do not match"
         );
-        game.play(state);
+        game.play(state, GuessWhatLib.isEnd);
     }
 
     function revealDefend(
@@ -134,7 +138,7 @@ contract GuessWhat is Ownable, ERC20 {
             strEqual(game.states[1].message, hashHex(revealedResponse)),
             "GuessWhat: do not match"
         );
-        game.play(state);
+        game.play(state, GuessWhatLib.isEnd);
     }
 
     function claimWinning(
@@ -142,6 +146,6 @@ contract GuessWhat is Ownable, ERC20 {
     ) external {
         StateLib.State memory state = StateLib.checkin(prehash, player, message, v, r, s);
 
-        game.claimWinning(state, GuessWhatLib.whoWins);
+        game.claimWinning(state, GuessWhatLib.whoWins, GuessWhatLib.isEnd);
     }
 }
