@@ -30,7 +30,7 @@ StateManager.sol
 ## Game examples
 
 ```
-GuessWhat.sol
+GuessBit.sol
 ```
 
 ## build with github/codespaces, save your time

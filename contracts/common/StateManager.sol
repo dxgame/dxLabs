@@ -31,6 +31,6 @@ contract StateManager {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 stateHash = getStateHash(state);
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, stateHash));
-        require(ecrecover(prefixedHash, v, r, s) == state.player, "GuessWhat: signature not right");
+        require(ecrecover(prefixedHash, v, r, s) == state.player, "DxGame: signature not right");
     }
 }

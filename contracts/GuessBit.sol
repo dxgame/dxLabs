@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "./common/SingleGameManager.sol";
 
-contract GuessWhat is Ownable, ERC20, SingleGameManager {
+contract GuessBit is Ownable, ERC20, SingleGameManager {
     enum Step {
         ONE_ChallengeStarted,
         TWO_DefenderDefended,
@@ -15,7 +15,7 @@ contract GuessWhat is Ownable, ERC20, SingleGameManager {
         FOUR_DefenderRevealed
     }
 
-    constructor(uint256 initialSupply) ERC20("GuessWhat", "GSWT") {
+    constructor(uint256 initialSupply) ERC20("GuessBit", "GSWT") {
         _mint(msg.sender, initialSupply);
         game.MAX_STATES = 4;
         game.MAX_BLOCKS_PER_MOVE = 100;
@@ -44,7 +44,7 @@ contract GuessWhat is Ownable, ERC20, SingleGameManager {
 
         require(
             strEqual(game.states[0].message, hashHex(revealedRequest)),
-            "GuessWhat: do not match"
+            "GuessBit: do not match"
         );
         playGame(game, state);
     }
@@ -56,14 +56,12 @@ contract GuessWhat is Ownable, ERC20, SingleGameManager {
 
         require(
             strEqual(game.states[1].message, hashHex(revealedResponse)),
-            "GuessWhat: do not match"
+            "GuessBit: do not match"
         );
         playGame(game, state);
     }
 
-    function whoWins(Game storage _game) override internal view returns (address) {
-        require(_game.states.length > 0, "GuessWhat: _game not started");
-
+    function whoWins(Game storage _game) override internal view notEmpty(_game) returns (address) {
         if (!isGameFinished(_game)) return address(0);
 
         string memory revealedRequest = _game.states[2].message;
@@ -71,9 +69,8 @@ contract GuessWhat is Ownable, ERC20, SingleGameManager {
         return isOne(revealedResponse) == isOne(revealedRequest) ? getGameDefender(_game) : getGameChallenger(game);
     }
 
-
     modifier nextMoveIs(Step move) {
-        require(Step(getGameNextMoveIndex(game)) == move, "GuessWhat: move not allowed");
+        require(Step(getGameNextMoveIndex(game)) == move, "DxGame: move not allowed");
         _;
     }
 }

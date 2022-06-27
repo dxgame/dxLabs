@@ -39,7 +39,7 @@ abstract contract SingleGameManager is GameManager {
     }
 
     modifier startable() {
-        require(isGameNotStarted(game) || isGameStopped(game) || isGameFinished(game), "GuessWhat: somebody playing");
+        require(isGameNotStarted(game) || isGameStopped(game) || isGameFinished(game), "DxGame: somebody playing");
         _;
     }
 }

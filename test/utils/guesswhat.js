@@ -4,19 +4,19 @@ const { ethers } = require("hardhat");
 const { tx, x, HashZero, messHexStr, nobody } = require("./common");
 
 const wrong = {
-  noGame: "GuessWhat: game not started",
-  you: "GuessWhat: not for you now",
-  late: "GuessWhat: you are too late",
-  move: "GuessWhat: move not allowed",
-  match: "GuessWhat: do not match",
-  winning: "GuessWhat: nobody winning",
-  playing: "GuessWhat: somebody playing",
-  signature: "GuessWhat: signature not right",
+  noGame: "DxGame: game not started",
+  you: "DxGame: not for you now",
+  late: "DxGame: you are too late",
+  move: "DxGame: move not allowed",
+  match: "GuessBit: do not match",
+  winning: "DxGame: nobody winning",
+  playing: "DxGame: somebody playing",
+  signature: "DxGame: signature not right",
 };
 
 const msg = {
-  challenge: "GuessWhat: challenge you",
-  defend: "GuessWhat: defend you",
+  challenge: "DxGame: challenge you",
+  defend: "DxGame: defend you",
 };
 
 const StateManager = {

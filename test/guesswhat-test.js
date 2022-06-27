@@ -11,12 +11,12 @@ const {
   claimWinning,
 } = require("./utils/guesswhat");
 
-describe("GuessWhat", function () {
+describe("GuessBit", function () {
   let gamers;
   let contract, deployer, defender, challenger, bystander, forwarder;
 
   beforeEach(async function () {
-    const preparation = await prepare("GuessWhat", {}, N`10`);
+    const preparation = await prepare("GuessBit", {}, N`10`);
     [contract, deployer, defender, challenger, bystander, forwarder] =
       preparation;
     gamers = { deployer, defender, challenger, bystander, forwarder };

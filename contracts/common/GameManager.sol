@@ -97,15 +97,15 @@ abstract contract GameManager is StateManager {
     }
 
     function getGameNextMoveIndex(Game storage game) internal view beforeDeadline(game) returns (uint256) {
-        require(isPlaying(game), "GuessWhat: move not allowed");
+        require(isPlaying(game), "DxGame: move not allowed");
         return game.states.length;
     }
 
     function _verifyChain(Game storage game, State memory state) private view {
         if (isGameNotStarted(game)) return;
 
-        require(getGameNextPlayer(game) == state.player, "GuessWhat: not for you now");
-        require(getGameLastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
+        require(getGameNextPlayer(game) == state.player, "DxGame: not for you now");
+        require(getGameLastStateHash(game) == state.prevHash, "DxGame: hash not right");
     }
 
     function isGameStopped(Game storage game) internal view returns (bool) {
@@ -125,22 +125,22 @@ abstract contract GameManager is StateManager {
     }
 
     modifier notStarted(Game storage game) {
-        require(isGameNotStarted(game), "GuessWhat: game already started");
+        require(isGameNotStarted(game), "DxGame: game already started");
         _;
     }
 
     modifier notEmpty(Game storage game) {
-        require(isGameStarted(game), "GuessWhat: game not started");
+        require(isGameStarted(game), "DxGame: game not started");
         _;
     }
 
     modifier validDefender(Game storage game, address _defender) {
-        require(game.winner == address(0) || game.winner == _defender, "GuessWhat: defender should be the winner");
+        require(game.winner == address(0) || game.winner == _defender, "DxGame: defender should be the winner");
         _;
     }
 
     modifier beforeDeadline(Game storage game) {
-        require(game.nextMoveDeadline == 0 || block.number <= game.nextMoveDeadline, "GuessWhat: you are too late");
+        require(game.nextMoveDeadline == 0 || block.number <= game.nextMoveDeadline, "DxGame: you are too late");
         _;
     }
 
@@ -148,7 +148,7 @@ abstract contract GameManager is StateManager {
         Game storage game,
         State memory state    
     ) {
-        require(!isGameFinished(game), "GuessWhat: states overflow");
+        require(!isGameFinished(game), "DxGame: states overflow");
         _verifyChain(game, state);
         _;
     }
@@ -189,10 +189,10 @@ abstract contract GameManager is StateManager {
     }
 
     function _startGame(Game storage game, State memory state) private notStarted(game) {
-        require(game.MAX_BLOCKS_PER_MOVE != 0, "GuessWhat: configure your game first please");
+        require(game.MAX_BLOCKS_PER_MOVE != 0, "DxGame: configure your game first please");
 
         address _defender = getGameDefender(game);
-        require(state.player != _defender, "GuessWhat: you are so ducking boring");
+        require(state.player != _defender, "DxGame: you are so ducking boring");
 
         game.round++;
         _setPlayers(game, state.player, _defender);
@@ -208,7 +208,7 @@ abstract contract GameManager is StateManager {
     }
 
     function startGame(Game storage game, State memory state) internal {
-        require(notPlaying(game), "GuessWhat: somebody playing");
+        require(notPlaying(game), "DxGame: somebody playing");
 
         if (stoppedPlaying(game)) {
             claimWinningGame(game, state);
@@ -220,16 +220,16 @@ abstract contract GameManager is StateManager {
     }
 
     function playGame(Game storage game, State memory state) internal {
-        require(isPlaying(game), "GuessWhat: move not allowed");
+        require(isPlaying(game), "DxGame: move not allowed");
         _pushState(game, state);
     }
 
     function claimWinningGame(Game storage game, State memory state) internal notEmpty(game) {
-        require(getGameLastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
-        require(stoppedPlaying(game), "GuessWhat: somebody playing");
+        require(getGameLastStateHash(game) == state.prevHash, "DxGame: hash not right");
+        require(stoppedPlaying(game), "DxGame: somebody playing");
 
         address winner = isGameStopped(game) ? _lastPlayer(game) : whoWins(game);
-        if (winner == address(0)) revert("GuessWhat: nobody won");
+        if (winner == address(0)) revert("DxGame: nobody won");
 
         _announceWinningGame(game, winner, state.player);
         _resetGame(game, state.player);
