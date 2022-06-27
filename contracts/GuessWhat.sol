@@ -11,7 +11,7 @@ import "./common/SingleGameManager.sol";
     step 4: defender reveals
 */
 
-contract GuessBit is SingleGameManager {
+contract GuessWhat is SingleGameManager {
     enum Step {
         ONE_ChallengeStarted,
         TWO_DefenderDefended,
