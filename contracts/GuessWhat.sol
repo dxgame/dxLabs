@@ -97,7 +97,7 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     modifier challengeable() {
-        require(game.isEmpty() || game.noResponse(GuessWhatLib.isEnd) || game.isFinished(GuessWhatLib.isEnd), "GuessWhat: somebody playing");
+        require(game.isNotStarted() || game.noResponse(GuessWhatLib.isEnd) || game.isFinished(GuessWhatLib.isEnd), "GuessWhat: somebody playing");
         _;
     }
 

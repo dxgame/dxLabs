@@ -63,8 +63,12 @@ library GameLib {
         return defender(game) == address(0);
     }
 
-    function isEmpty(Game storage game) public view returns (bool) {
+    function isNotStarted(Game storage game) public view returns (bool) {
         return game.states.length == 0;
+    }
+
+    function isStarted(Game storage game) public view returns (bool) {
+        return game.states.length != 0;
     }
 
     function isFinished(
@@ -79,7 +83,7 @@ library GameLib {
         Game storage game,
         function (Game storage) returns (bool) isEnd
     ) internal returns(bool) {
-        return !isEmpty(game) && !isFinished(game, isEnd);
+        return isStarted(game) && !isFinished(game, isEnd);
     }
 
     function _lastState(Game storage game) private view returns (StateLib.State storage){
@@ -110,7 +114,7 @@ library GameLib {
     }
 
     function _verifyChain(Game storage game, StateLib.State memory state) private view {
-        if (isEmpty(game)) return;
+        if (isNotStarted(game)) return;
 
         require(nextPlayer(game) == state.player, "GuessWhat: not for you now");
         require(lastStateHash(game) == state.prevHash, "GuessWhat: hash not right");
@@ -145,12 +149,12 @@ library GameLib {
     }
 
     modifier empty(Game storage game) {
-        require(isEmpty(game), "GuessWhat: game already started");
+        require(isNotStarted(game), "GuessWhat: game already started");
         _;
     }
 
     modifier notEmpty(Game storage game) {
-        require(!isEmpty(game), "GuessWhat: game not started");
+        require(isStarted(game), "GuessWhat: game not started");
         _;
     }
 
@@ -230,7 +234,7 @@ library GameLib {
     }
 
     function lastStateHash(Game storage game) internal view returns (bytes32) {
-        if (!isEmpty(game)) {
+        if (isStarted(game)) {
             return _lastState(game).getHash();
         }
         return keccak256(abi.encodePacked(blockhash(block.number - 1), game.id, game.round));
