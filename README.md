@@ -23,8 +23,8 @@ Proof of Luck
 ## Solidity libraris for onchain gaming
 
 ```
-GameLib.sol
-StateLib.sol
+GameManager.sol
+StateManager.sol
 ```
 
 ## Game examples

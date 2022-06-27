@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./library/StateLib.sol";
-import "./library/GameLib.sol";
+import "./library/StateManager.sol";
+import "./library/GameManager.sol";
 
 function isOne(string memory str) pure returns (bool) {
     return bytes(str)[0] == 0x31;
@@ -20,7 +20,7 @@ function strEqual(string memory a, string memory b) pure returns (bool) {
     return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
 }
 
-contract GuessWhat is Ownable, ERC20, GameLib {
+contract GuessWhat is Ownable, ERC20, GameManager {
     Game public game;
 
     enum Step {

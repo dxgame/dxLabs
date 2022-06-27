@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
-import "./StateLib.sol";
+import "./StateManager.sol";
 
 /*
     step 0: ready to start
@@ -22,7 +22,7 @@ import "./StateLib.sol";
     }
 */
 
-abstract contract GameLib is StateLib {
+abstract contract GameManager is StateManager {
     struct Game {
         uint256 id;
         uint256 round;

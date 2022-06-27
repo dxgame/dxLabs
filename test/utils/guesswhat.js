@@ -19,7 +19,7 @@ const msg = {
   defend: "GuessWhat: defend you",
 };
 
-const StateLib = {
+const StateManager = {
   getHash: (prevHash, signer, message) => {
     return ethers.utils.solidityKeccak256(
       ["bytes32", "address", "string"],
@@ -28,7 +28,7 @@ const StateLib = {
   },
 
   getParams: async function ({ prevHash = HashZero, player, message = "" }) {
-    const stateHash = StateLib.getHash(prevHash, player, message);
+    const stateHash = StateManager.getHash(prevHash, player, message);
     const flatSig = await player.signMessage(ethers.utils.arrayify(stateHash));
     const sig = ethers.utils.splitSignature(flatSig);
     return [prevHash, player.address, message, sig.v, sig.r, sig.s];
@@ -75,7 +75,7 @@ async function expectNoPlayers(contract) {
 
 async function move(contract, player, action, args = {}, processParams) {
   const prevHash = args.prevHash || (await contract.lastStateHash());
-  let params = await StateLib.getParams({ player, prevHash, ...args });
+  let params = await StateManager.getParams({ player, prevHash, ...args });
   params = processParams ? processParams(params) : params;
   const forwarder = contract.__god_forbid__forwarder || player;
   return contract.connect(forwarder)[action](...params);
@@ -186,7 +186,7 @@ async function fight(
 
 module.exports = {
   wrong,
-  StateLib,
+  StateManager,
   expectPlayers,
   expectNoPlayers,
 
