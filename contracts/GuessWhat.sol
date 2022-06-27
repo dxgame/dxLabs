@@ -62,7 +62,7 @@ contract GuessWhat is SingleGameManager {
     function revealChallenge(
         bytes32 prehash,
         address player,
-        string[2] calldata revealedRequest,
+        string[2] memory revealedRequest,
         uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
         State memory state = stateCheckIn(prehash, player, revealedRequest[0], v, r, s);
@@ -77,10 +77,10 @@ contract GuessWhat is SingleGameManager {
     function revealDefend(
         bytes32 prehash,
         address player,
-        string memory revealedResponse,
+        string[2] memory revealedResponse,
         uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.FOUR_DefenderRevealed) {
-        State memory state = stateCheckIn(prehash, player, revealedResponse, v, r, s);
+        State memory state = stateCheckIn(prehash, player, revealedResponse[0], v, r, s);
 
         require(
             strEqual(game.states[1].message, hashHex(revealedResponse)),
@@ -108,7 +108,18 @@ contract GuessWhat is SingleGameManager {
         return bytes(str)[0] == 0x31;
     }
 
-    //TODO: fix this :D
+    function parseInt(string memory s) private pure returns (uint256) {
+        bytes memory b = bytes(s);
+        uint256 result = 0;
+        for (uint i = 0; i < b.length; i++) {
+            uint8 bi = uint8(b[i]);
+            if (bi >= 48 && bi <= 57) {
+                result = result * 10 + (bi - 48);
+            }
+        }
+        return result;
+    }
+
     function hashHex(string[2] memory strs) private pure returns (string memory) {
         return Strings.toHexString(uint(keccak256(abi.encodePacked(strs[0], strs[1]))));
     }
