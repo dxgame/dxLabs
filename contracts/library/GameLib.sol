@@ -67,7 +67,7 @@ library GameLib {
         return game.states.length == 0;
     }
 
-    function isFull(
+    function isFinished(
         Game storage game,
         function (Game storage) returns (bool) isEnd
     ) internal returns (bool) {
@@ -79,7 +79,7 @@ library GameLib {
         Game storage game,
         function (Game storage) returns (bool) isEnd
     ) internal returns(bool) {
-        return !isEmpty(game) && !isFull(game, isEnd);
+        return !isEmpty(game) && !isFinished(game, isEnd);
     }
 
     function _lastState(Game storage game) private view returns (StateLib.State storage){
@@ -141,7 +141,7 @@ library GameLib {
         Game storage game,
         function (Game storage) returns (bool) isEnd
     ) internal returns(bool) {
-        return noResponse(game, isEnd) || isFull(game, isEnd);
+        return noResponse(game, isEnd) || isFinished(game, isEnd);
     }
 
     modifier empty(Game storage game) {
@@ -169,7 +169,7 @@ library GameLib {
         StateLib.State memory state,
         function (Game storage) returns (bool) isEnd    
     ) {
-        require(!isFull(game, isEnd), "GuessWhat: states overflow");
+        require(!isFinished(game, isEnd), "GuessWhat: states overflow");
         _verifyChain(game, state);
         _;
     }

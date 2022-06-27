@@ -30,7 +30,7 @@ library GuessWhatLib {
     function whoWins(GameLib.Game storage game) internal returns (address) {
         require(game.states.length > 0, "GuessWhat: game not started");
 
-        if (!game.isFull(isEnd)) return address(0);
+        if (!game.isFinished(isEnd)) return address(0);
 
         string memory revealedRequest = game.states[2].message;
         string memory revealedResponse = game.states[3].message;
@@ -97,7 +97,7 @@ contract GuessWhat is Ownable, ERC20 {
     }
 
     modifier challengeable() {
-        require(game.isEmpty() || game.noResponse(GuessWhatLib.isEnd) || game.isFull(GuessWhatLib.isEnd), "GuessWhat: somebody playing");
+        require(game.isEmpty() || game.noResponse(GuessWhatLib.isEnd) || game.isFinished(GuessWhatLib.isEnd), "GuessWhat: somebody playing");
         _;
     }
 
