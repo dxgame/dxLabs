@@ -160,6 +160,7 @@ abstract contract GameManager is StateManager {
         return keccak256(abi.encodePacked(
             address(this),
             blockhash(block.number - 1),
+            msg.sender,
             game.id,
             game.round
         ));
