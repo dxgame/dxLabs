@@ -7,18 +7,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "./common/SingleGameManager.sol";
 
-function isOne(string memory str) pure returns (bool) {
-    return bytes(str)[0] == 0x31;
-}
-
-function hashHex(string memory str) pure returns (string memory) {
-    return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
-}
-
-function strEqual(string memory a, string memory b) pure returns (bool) {
-    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
-}
-
 contract GuessWhat is Ownable, ERC20, SingleGameManager {
     enum Step {
         ONE_ChallengeStarted,
@@ -88,4 +76,16 @@ contract GuessWhat is Ownable, ERC20, SingleGameManager {
         require(Step(getGameNextMoveIndex(game)) == move, "GuessWhat: move not allowed");
         _;
     }
+}
+
+function isOne(string memory str) pure returns (bool) {
+    return bytes(str)[0] == 0x31;
+}
+
+function hashHex(string memory str) pure returns (string memory) {
+    return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
+}
+
+function strEqual(string memory a, string memory b) pure returns (bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
 }
