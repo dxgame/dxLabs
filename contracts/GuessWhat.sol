@@ -12,6 +12,10 @@ import "./common/SingleGameManager.sol";
 */
 
 contract GuessWhat is SingleGameManager {
+    struct What {
+        uint256[2] range;
+    }
+
     enum Step {
         ONE_ChallengeStarted,
         TWO_DefenderDefended,
