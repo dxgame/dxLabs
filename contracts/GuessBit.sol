@@ -8,15 +8,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./common/SingleGameManager.sol";
 
 /*
-    step 0: ready to start
-
     step 1: challenger starts new challenge
     step 2: defender defends
-
     step 3: challenger reveals
     step 4: defender reveals
-
-    step 5: winner claims winning
 */
 
 contract GuessBit is Ownable, ERC20, SingleGameManager {
