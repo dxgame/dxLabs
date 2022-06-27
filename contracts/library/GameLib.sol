@@ -148,7 +148,7 @@ library GameLib {
         return noResponse(game, isEnd) || isFinished(game, isEnd);
     }
 
-    modifier empty(Game storage game) {
+    modifier notStarted(Game storage game) {
         require(isNotStarted(game), "GuessWhat: game already started");
         _;
     }
@@ -221,7 +221,7 @@ library GameLib {
         Game storage game,
         StateLib.State memory state,
         function (Game storage) returns (bool) isEnd
-    ) private empty(game) {
+    ) private notStarted(game) {
         require(game.MAX_BLOCKS_PER_MOVE != 0, "GuessWhat: configure your game first please");
 
         address _defender = defender(game);
