@@ -22,8 +22,12 @@ contract GuessBit is Ownable, ERC20, SingleGameManager {
         FOUR_DefenderRevealed
     }
 
-    constructor(uint256 initialSupply) ERC20("GuessBit", "GSWT") {
-        game.MAX_STATES = 4;
+    constructor(
+        uint256 initialSupply
+    )
+        ERC20("GuessBit", "GSWT")
+        SingleGameManager(4, 100)
+    {
         _mint(msg.sender, initialSupply);
     }
 
@@ -79,16 +83,17 @@ contract GuessBit is Ownable, ERC20, SingleGameManager {
         require(Step(getGameNextMoveIndex(game)) == move, "DxGame: move not allowed");
         _;
     }
+
+    function isOne(string memory str) private pure returns (bool) {
+        return bytes(str)[0] == 0x31;
+    }
+
+    function hashHex(string memory str) private pure returns (string memory) {
+        return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
+    }
+
+    function strEqual(string memory a, string memory b) private pure returns (bool) {
+        return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+    }
 }
 
-function isOne(string memory str) pure returns (bool) {
-    return bytes(str)[0] == 0x31;
-}
-
-function hashHex(string memory str) pure returns (string memory) {
-    return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
-}
-
-function strEqual(string memory a, string memory b) pure returns (bool) {
-    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
-}

@@ -6,8 +6,9 @@ import "./GameManager.sol";
 abstract contract SingleGameManager is GameManager {
     Game public game;
 
-    constructor() {
-        game.MAX_BLOCKS_PER_MOVE = 100;
+    constructor(uint256 maxStates, uint256 maxBlocksPerMove) {
+        game.MAX_STATES = maxStates;
+        game.MAX_BLOCKS_PER_MOVE = maxBlocksPerMove;
     }
 
     function challenger() public view returns (address) {
@@ -39,7 +40,11 @@ abstract contract SingleGameManager is GameManager {
     }
 
     modifier startable() {
-        require(isGameNotStarted(game) || isGameStopped(game) || isGameFinished(game), "DxGame: somebody playing");
+        require(
+            isGameNotStarted(game) || isGameStopped(game) || isGameFinished(game),
+            "DxGame: somebody playing"
+        );
+
         _;
     }
 }

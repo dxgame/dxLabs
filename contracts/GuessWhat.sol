@@ -13,8 +13,13 @@ import "./common/SingleGameManager.sol";
 
 contract GuessWhat is SingleGameManager {
     struct What {
-        uint256[2] range;
+        uint256 lowerBound;
+        uint256 upperBound;
+        uint256 challenge;
+        uint256 defend;
     }
+
+    What public what;
 
     enum Step {
         ONE_ChallengeStarted,
@@ -23,12 +28,20 @@ contract GuessWhat is SingleGameManager {
         FOUR_DefenderRevealed
     }
 
-    constructor() {
-        game.MAX_STATES = 4;
+    constructor(
+        uint256 lowerBound,
+        uint256 upperBound
+    ) SingleGameManager(4, 200)
+    {
+        what.lowerBound = lowerBound;
+        what.upperBound = upperBound;
     }
 
     function challenge(
-        bytes32 prehash, address player, string memory encryptedRequest, uint8 v, bytes32 r, bytes32 s
+        bytes32 prehash,
+        address player,
+        string memory encryptedRequest,
+        uint8 v, bytes32 r, bytes32 s
     ) external startable {
         State memory state = stateCheckIn(prehash, player, encryptedRequest, v, r, s);
 
@@ -36,7 +49,10 @@ contract GuessWhat is SingleGameManager {
     }
 
     function defend(
-        bytes32 prehash, address player, string memory encryptedResponse, uint8 v, bytes32 r, bytes32 s
+        bytes32 prehash,
+        address player,
+        string memory encryptedResponse,
+        uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.TWO_DefenderDefended) {
         State memory state = stateCheckIn(prehash, player, encryptedResponse, v, r, s);
 
@@ -44,9 +60,12 @@ contract GuessWhat is SingleGameManager {
     }
 
     function revealChallenge(
-        bytes32 prehash, address player, string memory revealedRequest, uint8 v, bytes32 r, bytes32 s
+        bytes32 prehash,
+        address player,
+        string[2] calldata revealedRequest,
+        uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
-        State memory state = stateCheckIn(prehash, player, revealedRequest, v, r, s);
+        State memory state = stateCheckIn(prehash, player, revealedRequest[0], v, r, s);
 
         require(
             strEqual(game.states[0].message, hashHex(revealedRequest)),
@@ -56,7 +75,10 @@ contract GuessWhat is SingleGameManager {
     }
 
     function revealDefend(
-        bytes32 prehash, address player, string memory revealedResponse, uint8 v, bytes32 r, bytes32 s
+        bytes32 prehash,
+        address player,
+        string memory revealedResponse,
+        uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.FOUR_DefenderRevealed) {
         State memory state = stateCheckIn(prehash, player, revealedResponse, v, r, s);
 
@@ -72,23 +94,30 @@ contract GuessWhat is SingleGameManager {
 
         string memory revealedRequest = _game.states[2].message;
         string memory revealedResponse = _game.states[3].message;
-        return isOne(revealedResponse) == isOne(revealedRequest) ? getGameDefender(_game) : getGameChallenger(game);
+        return isOne(revealedResponse) == isOne(revealedRequest)
+            ? getGameDefender(_game)
+            : getGameChallenger(game);
     }
 
     modifier nextMoveIs(Step move) {
         require(Step(getGameNextMoveIndex(game)) == move, "DxGame: move not allowed");
         _;
     }
-}
 
-function isOne(string memory str) pure returns (bool) {
-    return bytes(str)[0] == 0x31;
-}
+    function isOne(string memory str) private pure returns (bool) {
+        return bytes(str)[0] == 0x31;
+    }
 
-function hashHex(string memory str) pure returns (string memory) {
-    return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
-}
+    //TODO: fix this :D
+    function hashHex(string[2] memory strs) private pure returns (string memory) {
+        return Strings.toHexString(uint(keccak256(abi.encodePacked(strs[0], strs[1]))));
+    }
 
-function strEqual(string memory a, string memory b) pure returns (bool) {
-    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+    function hashHex(string memory str) private pure returns (string memory) {
+        return Strings.toHexString(uint(keccak256(abi.encodePacked(str))));
+    }
+
+    function strEqual(string memory a, string memory b) private pure returns (bool) {
+        return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+    }
 }

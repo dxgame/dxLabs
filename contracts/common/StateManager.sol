@@ -9,12 +9,15 @@ contract StateManager {
         string message;
     }
 
-    function getStateHash(State memory state) internal pure returns (bytes32) {
+    function getStateHash(
+        State memory state
+    ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
     }
 
     function stateCheckIn(
-        bytes32 prevHash, address player, string memory message,
+        bytes32 prevHash, address player,
+        string memory message,
         uint8 v, bytes32 r, bytes32 s
     ) internal pure returns (State memory) {
         State memory state;
@@ -27,7 +30,10 @@ contract StateManager {
         return state;
     }
 
-    function _verifySignature(State memory state, uint8 v, bytes32 r, bytes32 s) private pure {
+    function _verifySignature(
+        State memory state,
+        uint8 v, bytes32 r, bytes32 s
+    ) private pure {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 stateHash = getStateHash(state);
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, stateHash));
