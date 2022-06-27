@@ -39,7 +39,8 @@
 				"GitHub.vscode-pull-request-github",
 				"JuanBlanco.solidity",
 				"dbaeumer.vscode-eslint",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"donjayamanne.githistory"
 			]
 		}
 	},

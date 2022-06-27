@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-library StateLib {
+contract StateLib {
     struct State {
         bytes32 prevHash;
 
@@ -9,13 +9,13 @@ library StateLib {
         string message;
     }
 
-    function getHash(State memory state) internal pure returns (bytes32) {
+    function getStateHash(State memory state) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(state.prevHash, state.player, state.message));
     }
 
     function verifySignature(State memory state, uint8 v, bytes32 r, bytes32 s) private pure {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 stateHash = getHash(state);
+        bytes32 stateHash = getStateHash(state);
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, stateHash));
         require(ecrecover(prefixedHash, v, r, s) == state.player, "GuessWhat: signature not right");
     }
