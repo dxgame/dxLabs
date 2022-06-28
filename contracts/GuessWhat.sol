@@ -108,6 +108,11 @@ contract GuessWhat is SingleGameManager {
         return bytes(str)[0] == 0x31;
     }
 
+    function getDigits(uint256  n) private pure returns (uint256 ) {
+        if (n <= 9) return 1;
+        return getDigits(n / 10) + 1;
+    }
+
     function parseInt(string memory s) private pure returns (uint256) {
         bytes memory b = bytes(s);
         uint256 result = 0;
