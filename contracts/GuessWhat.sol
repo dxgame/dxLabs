@@ -33,6 +33,7 @@ contract GuessWhat is SingleGameManager {
         uint256 upperBound
     ) SingleGameManager(4, 200)
     {
+        require(upperBound > lowerBound, "GuessWhat: upperBound must be greater than lowerBound");
         what.lowerBound = lowerBound;
         what.upperBound = upperBound;
     }
@@ -62,7 +63,7 @@ contract GuessWhat is SingleGameManager {
     function revealChallenge(
         bytes32 prehash,
         address player,
-        string[2] memory revealedRequest,
+        string memory revealedRequest,
         uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
         State memory state = stateCheckIn(prehash, player, revealedRequest[0], v, r, s);
@@ -123,6 +124,21 @@ contract GuessWhat is SingleGameManager {
             }
         }
         return result;
+    }
+
+    function parseIntInBound(string memory s, uint256 bound) private pure returns (uint256) {
+        uint256 boundDigits = getDigits(bound);
+        string memory n = substring(s, 0, boundDigits);
+        return parseInt(n);
+    }
+
+    function substring(string memory str, uint startIndex, uint endIndex) private pure returns (string memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory result = new bytes(endIndex-startIndex);
+        for(uint i = startIndex; i < endIndex; i++) {
+            result[i-startIndex] = strBytes[i];
+        }
+        return string(result);
     }
 
     function hashHex(string[2] memory strs) private pure returns (string memory) {
