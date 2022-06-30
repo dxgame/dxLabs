@@ -9,6 +9,7 @@ const {
   failMessSignsMove,
   challenge,
   claimWinning,
+  revealChallenge,
 } = require("./utils/guesswhat");
 
 describe("GuessBit", function () {
@@ -310,6 +311,16 @@ describe("GuessBit", function () {
     it("Should be able to claim winning if no response after game finished # challenger won", async function () {
       await fight(contract, gamers, [x`1c`, x`xd`, "1c", "xd"]);
       await mineBlocks(150);
+      await claimWinning(contract, challenger, bystander);
+    });
+
+    it("Should fail if your input is out of [0, 1]", async function () {
+      await fight(contract, gamers, [x`3c`, x`xd`, "3c", "xd"]);
+      await claimWinning(contract, defender, bystander);
+    });
+
+    it("Should fail if your input is out of [0, 1]", async function () {
+      await fight(contract, gamers, [x`0c`, x`4d`, "0c", "4d"]);
       await claimWinning(contract, challenger, bystander);
     });
   });

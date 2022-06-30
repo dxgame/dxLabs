@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "./common/SingleGameManager.sol";
+import "./SingleGameManager.sol";
 
 /*
     step 1: challenger starts new challenge
@@ -12,14 +12,7 @@ import "./common/SingleGameManager.sol";
 */
 
 contract GuessWhat is SingleGameManager {
-    struct What {
-        uint256 lowerBound;
-        uint256 upperBound;
-        uint256 challenge;
-        uint256 defend;
-    }
-
-    What public what;
+    uint256 upperBound;
 
     enum Step {
         ONE_ChallengeStarted,
@@ -28,14 +21,8 @@ contract GuessWhat is SingleGameManager {
         FOUR_DefenderRevealed
     }
 
-    constructor(
-        uint256 lowerBound,
-        uint256 upperBound
-    ) SingleGameManager(4, 200)
-    {
-        require(upperBound > lowerBound, "GuessWhat: upperBound must be greater than lowerBound");
-        what.lowerBound = lowerBound;
-        what.upperBound = upperBound;
+    constructor(uint256 _upperBound) SingleGameManager(4, 100) {
+        upperBound = _upperBound;
     }
 
     function challenge(
@@ -66,7 +53,7 @@ contract GuessWhat is SingleGameManager {
         string memory revealedRequest,
         uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.THREE_ChallengerRevealed) {
-        State memory state = stateCheckIn(prehash, player, revealedRequest[0], v, r, s);
+        State memory state = stateCheckIn(prehash, player, revealedRequest, v, r, s);
 
         require(
             strEqual(game.states[0].message, hashHex(revealedRequest)),
@@ -78,10 +65,10 @@ contract GuessWhat is SingleGameManager {
     function revealDefend(
         bytes32 prehash,
         address player,
-        string[2] memory revealedResponse,
+        string memory revealedResponse,
         uint8 v, bytes32 r, bytes32 s
     ) external nextMoveIs(Step.FOUR_DefenderRevealed) {
-        State memory state = stateCheckIn(prehash, player, revealedResponse[0], v, r, s);
+        State memory state = stateCheckIn(prehash, player, revealedResponse, v, r, s);
 
         require(
             strEqual(game.states[1].message, hashHex(revealedResponse)),
@@ -95,9 +82,16 @@ contract GuessWhat is SingleGameManager {
 
         string memory revealedRequest = _game.states[2].message;
         string memory revealedResponse = _game.states[3].message;
-        return isOne(revealedResponse) == isOne(revealedRequest)
-            ? getGameDefender(_game)
-            : getGameChallenger(game);
+
+        uint256 digits = getDigits(upperBound);
+        uint256 request = parseIntInFirstDigits(revealedRequest, digits);
+        uint256 response = parseIntInFirstDigits(revealedResponse, digits);
+        bool challengeIsValid = request <= upperBound;
+        bool defendFailed = response != request;
+
+        return (challengeIsValid && defendFailed)
+            ? getGameChallenger(_game)
+            : getGameDefender(_game);
     }
 
     modifier nextMoveIs(Step move) {
@@ -105,13 +99,17 @@ contract GuessWhat is SingleGameManager {
         _;
     }
 
-    function isOne(string memory str) private pure returns (bool) {
-        return bytes(str)[0] == 0x31;
-    }
-
     function getDigits(uint256  n) private pure returns (uint256 ) {
         if (n <= 9) return 1;
         return getDigits(n / 10) + 1;
+    }
+
+    function parseIntInFirstDigits(
+        string memory s,
+        uint256 digits
+    ) private pure returns (uint256) {
+        string memory n = substring(s, 0, digits);
+        return parseInt(n);
     }
 
     function parseInt(string memory s) private pure returns (uint256) {
@@ -126,12 +124,6 @@ contract GuessWhat is SingleGameManager {
         return result;
     }
 
-    function parseIntInBound(string memory s, uint256 bound) private pure returns (uint256) {
-        uint256 boundDigits = getDigits(bound);
-        string memory n = substring(s, 0, boundDigits);
-        return parseInt(n);
-    }
-
     function substring(string memory str, uint startIndex, uint endIndex) private pure returns (string memory) {
         bytes memory strBytes = bytes(str);
         bytes memory result = new bytes(endIndex-startIndex);
@@ -139,10 +131,6 @@ contract GuessWhat is SingleGameManager {
             result[i-startIndex] = strBytes[i];
         }
         return string(result);
-    }
-
-    function hashHex(string[2] memory strs) private pure returns (string memory) {
-        return Strings.toHexString(uint(keccak256(abi.encodePacked(strs[0], strs[1]))));
     }
 
     function hashHex(string memory str) private pure returns (string memory) {
