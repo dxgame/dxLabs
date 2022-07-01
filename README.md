@@ -33,6 +33,12 @@ StateManager.sol
 GuessBit.sol
 ```
 
+## TODO: Support GAME SCRIPTS
+
+```
+GAME SCRIPTS for supporting users to make their own games
+```
+
 ## build with github/codespaces, save your time
 
 Try running some of the following tasks:
