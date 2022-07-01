@@ -21,7 +21,7 @@ import "./StateManager.sol";
         You must set MAX_STATES to the number of steps in the game.
         or override isGameFinished() to customize the game-specific finished condition.
 
-    // TODO: GAME SCRIPTS - programmable game-specific function to determine who wins, to enable people invent more games
+    // TODO: GAME SCRIPTS - programmable game-specific function to help users make more games
  */
 
 abstract contract GameManager is StateManager {
