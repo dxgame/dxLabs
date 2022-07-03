@@ -7,6 +7,14 @@ abstract contract SeatManager {
         uint nextMoveDeadline;
     }
 
+    function transferSeat(Seat storage seat, address _to) internal {
+        seat.player = _to;
+    }
+
+    function extendDeadline(Seat storage seat, uint256 _deadline) internal {
+        seat.nextMoveDeadline = _deadline;
+    }
+
     function isSeatDead(Seat memory seat) internal view returns (bool) {
         return seat.nextMoveDeadline < block.number;
     }
