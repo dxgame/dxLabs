@@ -5,6 +5,7 @@ abstract contract SeatManager {
     struct Seat {
         address player;
         uint nextMoveDeadline;
+        uint price;
     }
 
     function transferSeat(Seat storage seat, address _to) internal {
@@ -13,6 +14,10 @@ abstract contract SeatManager {
 
     function extendDeadline(Seat storage seat, uint256 _deadline) internal {
         seat.nextMoveDeadline = _deadline;
+    }
+
+    function updatePrice(Seat storage seat, uint256 _price) internal {
+        seat.price = _price;
     }
 
     function isSeatDead(Seat memory seat) internal view returns (bool) {
