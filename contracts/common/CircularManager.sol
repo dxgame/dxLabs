@@ -13,7 +13,6 @@ contract CircularManager {
         uint256 id;
         uint256 prev;
         uint256 next;
-        address data;
     }
 
     struct CircularList {
@@ -22,11 +21,11 @@ contract CircularManager {
         mapping (uint256 => CircularNode) nodes;
     }
 
-    function addCircularNode (CircularList storage list, address data) internal returns (uint256) {
+    function addCircularNode (CircularList storage list) internal returns (uint256) {
         list.idCounter++;
 
         uint256 id = list.idCounter;
-        list.nodes[id] = CircularNode(id, 0, 0, data);
+        list.nodes[id] = CircularNode(id, 0, 0);
         _addToCircularList(list, id);
 
         return id;
@@ -43,22 +42,18 @@ contract CircularManager {
         delete list.nodes[id];
     }
 
-    function circularListIsEmpty(CircularList storage list) internal view returns (bool) {
-        return list.head == 0;
-    }
-
-    function circularListIsSingle(CircularList storage list) internal view returns (bool) {
-        return !circularListIsEmpty(list) && list.nodes[list.head].next == 0;
-    }
-
-    function circularListIsCouple(CircularList storage list) internal view returns (bool) {
-        return !circularListIsEmpty(list)
-            && !circularListIsSingle(list)
-            && list.nodes[list.head].next == list.nodes[list.head].prev;
+    function countCircularList(CircularList storage list) internal view returns (uint256) {
+        uint256 count = 0;
+        uint256 id = list.head;
+        while ((id != 0) && (id != list.head)) {
+            count++;
+            id = list.nodes[id].next;
+        }
+        return count;
     }
 
     function _addToCircularList (CircularList storage list, uint256 nodeId) private {
-        if (circularListIsEmpty(list)) {
+        if (list.head == 0) {
             list.nodes[nodeId].next = 0;
             list.nodes[nodeId].prev = 0;
             list.head = nodeId;

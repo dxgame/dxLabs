@@ -39,6 +39,10 @@ GuessBit.sol
 GAME SCRIPTS for supporting users to make their own games
 ```
 
+## TODO: GuessWhat Visualization
+One Shot
+Open Army
+
 ## build with github/codespaces, save your time
 
 Try running some of the following tasks:
