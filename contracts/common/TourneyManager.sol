@@ -3,28 +3,20 @@ pragma solidity ^0.8.14;
 
 // import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import "./GameManager.sol";
+import "./StateManager.sol";
 import "./CircularManager.sol";
 
-contract SeatManager {
-    struct Seat {
-        uint256 id;
-        address player;
-        uint nextMoveDeadline;
-    }
-}
-
-abstract contract TourneyManager is GameManager, SeatManager, CircularManager {
+abstract contract TourneyManager is StateManager, CircularManager {
     struct Tourney {
         uint256 id;
-        Game[] games;
         CircularList circular;
-        mapping (uint256 => Seat) seats;
+        mapping (uint256 => address) seats;
+        mapping (uint256 => State[]) games;
     }
 
     function registerTourney(Tourney storage tourney, address player) internal {
         uint256 id = addCircularNode(tourney.circular);
-        tourney.seats[id] = Seat(id, player, 0);
+        tourney.seats[id] = player;
     }
 
     function markSeatLost(Tourney storage tourney, uint256 id) internal {

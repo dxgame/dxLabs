@@ -4,7 +4,6 @@ pragma solidity ^0.8.14;
 contract StateManager {
     struct State {
         bytes32 prevHash;
-
         address player;
         string message;
     }
