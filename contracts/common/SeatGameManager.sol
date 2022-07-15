@@ -20,6 +20,9 @@ pragma solidity ^0.8.14;
         or override isGameFinished() to customize the game-specific finished condition.
 
     // TODO: GAME SCRIPTS - programmable game-specific function to help users make more games
+
+    // TODO: use channel id & state no to identify the move
+    // TODO: maybe StateChannelManager ?
  */
 
 abstract contract SeatGameManager {
