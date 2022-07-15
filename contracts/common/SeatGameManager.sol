@@ -39,23 +39,18 @@ abstract contract SeatGameManager is StateManager {
 
     event StartGameEvent(
         uint256 indexed id,
-        uint256 round,
-        address indexed challenger,
-        address indexed defender
+        uint256 indexed challenger,
+        uint256 indexed defender
     );
     event UpdateStateEvent(
         uint256 indexed id,
-        uint256 round,
-        uint256 states,
-        address indexed player,
-        address indexed getGameNextPlayer,
+        uint256 indexed player,
+        uint256 indexed nextPlayer,
         uint256 nextMoveDeadline
     );
     event WinningGameEvent(
         uint256 indexed id,
-        uint256 round,
-        address indexed winner,
-        address indexed announcer
+        uint256 indexed winner
     );
 
     function isGameNotStarted(
@@ -68,6 +63,12 @@ abstract contract SeatGameManager is StateManager {
         Game storage game
     ) internal view returns (bool) {
         return game.states.length != 0;
+    }
+
+    function isGameFinished(
+        Game storage game
+    ) internal view virtual returns (bool) {
+        return game.MAX_STATES != 0 && game.states.length == game.MAX_STATES;
     }
 
     function isGameHalfway(
@@ -88,12 +89,6 @@ abstract contract SeatGameManager is StateManager {
         return isGameHalfway(game) && (block.number > game.nextMoveDeadline);
     }
 
-    function isGameFinished(
-        Game storage game
-    ) internal view virtual returns (bool) {
-        return game.MAX_STATES != 0 && game.states.length == game.MAX_STATES;
-    }
-
     function stoppedPlaying(
         Game storage game
     ) internal view returns(bool) {
@@ -108,23 +103,27 @@ abstract contract SeatGameManager is StateManager {
 
     function getGameOpponent(
         Game storage game,
-        address player
+        uint256 player
     ) internal view returns (address) {
-        if (game.players[0] == player) return game.players[1];
-        if (game.players[1] == player) return game.players[0];
-        return address(0);
+        if (player == game.challenger) {
+            return game.defender;
+        }
+        if (player == game.defender) {
+            return game.challenger;
+        }
+        revert("Player is not a part of this game");
     }
 
     function getGameNextPlayer(
         Game storage game
     ) internal view returns (address) {
-        address player = _lastPlayer(game);
+        uint256 player = _lastPlayer(game);
         return getGameOpponent(game, player);
     }
 
     function getGameNextMoveIndex(
         Game storage game
-    ) internal view beforeDeadline(game) returns (uint256) {
+    ) internal view returns (uint256) {
         require(isPlaying(game), "DxGame: move not allowed");
         return game.states.length;
     }
@@ -132,26 +131,23 @@ abstract contract SeatGameManager is StateManager {
     function getGameLastStateHash(
         Game storage game
     ) internal view returns (bytes32) {
-        if (isGameStarted(game)) {
-            return getStateHash(_lastState(game));
-        }
-        return game.id
+        return isGameStarted(game) ? getStateHash(_lastState(game)) : bytes32(game.id);
     }
 
     function startGame(
         Game storage game,
         State memory state,
         uint256 challenger,
-        uint256 defender,
+        uint256 defender
     ) internal {
-
         require(isGameNotStarted(game), "DxGame: game already started");
         game.challenger = challenger;
         game.defender = defender;
         _pushState(game, state);
-        emit StartGameEvent(game.id, state.player, _defender);
+        emit StartGameEvent(game.id, challenger, defender);
     }
 
+    // TODO: improve
     function playGame(
         Game storage game,
         State memory state
@@ -162,8 +158,7 @@ abstract contract SeatGameManager is StateManager {
 
     function getGameWinner(Game storage game) internal view returns (address) {
         if (!stoppedPlaying(game)) return 0;
-
-        return isGameStopped(game) ? _lastPlayer(game) : whoWins(game)
+        return isGameStopped(game) ? _lastPlayer(game) : whoWins(game);
     }
 
     function whoWins(
