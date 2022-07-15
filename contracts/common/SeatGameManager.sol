@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "./StateManager.sol";
-
 /*
     To indicate who wins the game:
 
@@ -24,7 +22,7 @@ import "./StateManager.sol";
     // TODO: GAME SCRIPTS - programmable game-specific function to help users make more games
  */
 
-abstract contract SeatGameManager is StateManager {
+abstract contract SeatGameManager {
     struct Game {
         uint256 id;
         uint256 MAX_STATES;
@@ -32,7 +30,7 @@ abstract contract SeatGameManager is StateManager {
 
         uint256 challenger;
         uint256 defender;
-        State[] states;
+        string[] states;
 
         uint256 nextMoveDeadline;
     }
@@ -52,12 +50,6 @@ abstract contract SeatGameManager is StateManager {
         uint256 indexed id,
         uint256 indexed winner
     );
-
-    function isGameNotStarted(
-        Game storage game
-    ) internal view returns (bool) {
-        return game.states.length == 0;
-    }
 
     function isGameStarted(
         Game storage game
@@ -104,7 +96,7 @@ abstract contract SeatGameManager is StateManager {
     function getGameOpponent(
         Game storage game,
         uint256 player
-    ) internal view returns (address) {
+    ) internal view returns (uint256) {
         if (player == game.challenger) {
             return game.defender;
         }
@@ -116,7 +108,7 @@ abstract contract SeatGameManager is StateManager {
 
     function getGameNextPlayer(
         Game storage game
-    ) internal view returns (address) {
+    ) internal view returns (uint256) {
         uint256 player = _lastPlayer(game);
         return getGameOpponent(game, player);
     }
@@ -128,35 +120,31 @@ abstract contract SeatGameManager is StateManager {
         return game.states.length;
     }
 
-    function getGameLastStateHash(
-        Game storage game
-    ) internal view returns (bytes32) {
-        return isGameStarted(game) ? getStateHash(_lastState(game)) : bytes32(game.id);
-    }
-
     function startGame(
         Game storage game,
-        State memory state,
+        string memory state,
         uint256 challenger,
         uint256 defender
     ) internal {
-        require(isGameNotStarted(game), "DxGame: game already started");
+        require(game.states.length == 0, "DxGame: game already started");
         game.challenger = challenger;
         game.defender = defender;
         _pushState(game, state);
         emit StartGameEvent(game.id, challenger, defender);
     }
 
-    // TODO: improve
     function playGame(
         Game storage game,
-        State memory state
+        string memory state
     ) internal {
-        require(isPlaying(game), "DxGame: move not allowed");
+        require(game.states.length > 0, "DxGame: game not started");
+        require(block.number <= game.nextMoveDeadline, "DxGame: you are too late");
+        require(!isGameFinished(game), "DxGame: game already finished");
+
         _pushState(game, state);
     }
 
-    function getGameWinner(Game storage game) internal view returns (address) {
+    function getGameWinner(Game storage game) internal view returns (uint256) {
         if (!stoppedPlaying(game)) return 0;
         return isGameStopped(game) ? _lastPlayer(game) : whoWins(game);
     }
@@ -165,77 +153,35 @@ abstract contract SeatGameManager is StateManager {
         Game storage game
     ) internal view virtual returns (uint256);
 
-    modifier notEmpty(
-        Game storage game
-    ) {
-        require(isGameStarted(game), "DxGame: game not started");
-        _;
-    }
-
-    modifier validDefender(
-        Game storage game,
-        address _defender
-    ) {
-        require(game.winner == address(0) || game.winner == _defender, "DxGame: defender should be the winner");
-        _;
-    }
-
-    modifier beforeDeadline(
-        Game storage game
-    ) {
-        require(game.nextMoveDeadline == 0 || block.number <= game.nextMoveDeadline, "DxGame: you are too late");
-        _;
-    }
-
-    modifier validNewState(
-        Game storage game,
-        State memory state    
-    ) {
-        require(!isGameFinished(game), "DxGame: states overflow");
-        _verifyChain(game, state);
-        _;
-    }
-
     function _lastState(
         Game storage game
-    ) private view returns (State storage){
+    ) private view returns (string storage){
         return game.states[game.states.length - 1];
     }
 
     function _lastPlayer(
         Game storage game
-    ) private view returns (address) {
+    ) private view returns (uint256) {
         return game.states.length % 2 == 1 ? game.challenger : game.defender;
     }
 
-    function _verifyChain(
-        Game storage game,
-        State memory state
-    ) private view {
-        if (isGameNotStarted(game)) return;
-
-        require(getGameNextPlayer(game) == state.player, "DxGame: not for you now");
-        require(getGameLastStateHash(game) == state.prevHash, "DxGame: hash not right");
-    }
-
-    function _updateDeadlines(
+    function _nextPlayer(
         Game storage game
-    ) private {
-        game.nextMoveDeadline = block.number + game.MAX_BLOCKS_PER_MOVE;
+    ) private view returns (uint256) {
+        return game.states.length % 2 == 0 ? game.challenger : game.defender;
     }
 
     function _pushState(
         Game storage game,
-        State memory state
-    ) private beforeDeadline(game) validNewState(game, state) {
+        string memory state
+    ) private {
         game.states.push(state);
-        _updateDeadlines(game);
+        game.nextMoveDeadline = block.number + game.MAX_BLOCKS_PER_MOVE;
 
         emit UpdateStateEvent(
             game.id,
-            game.states.length,
-            state.player,
-            getGameOpponent(game, state.player),
+            _lastPlayer(game),
+            _nextPlayer(game),
             game.nextMoveDeadline
         );
     }
