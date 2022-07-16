@@ -4,9 +4,9 @@ pragma solidity ^0.8.14;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract HalvingToken is ERC20 {
-    uint256 mintCounter;
-    uint256 halvingPeriod;
-    uint256 initialAmount;
+    uint256 public mintCounter;
+    uint256 public halvingPeriod;
+    uint256 public initialAmount;
 
     constructor(
         string memory name,
