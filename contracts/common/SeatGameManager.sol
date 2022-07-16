@@ -1,28 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-/*
-    To indicate who wins the game:
-
-        use MAX_BLOCKS_PER_MOVE and whoWins
-
-        if one player were late by MAX_BLOCKS_PER_MOVE, same as NO SHOW
-            the last player wins
-
-        if game finished
-            the winner will be determined by cutomized game-specific function whoWins
-
-    To indicate when the game is finished:
-
-        use MAX_STATES or isGameFinished
-
-        You must set MAX_STATES to the number of steps in the game.
-        or override isGameFinished() to customize the game-specific finished condition.
-
-    // TODO: use channel id & state no to identify the move
-    // TODO: maybe StateChannelManager ?
- */
-
 abstract contract SeatGameManager {
     struct Game {
         uint256 id;
