@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-abstract contract SeatGameManager {
+abstract contract GameChannelManager {
     struct Game {
         uint256 id;
         uint256 MAX_STATES;

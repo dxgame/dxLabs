@@ -2,8 +2,9 @@
 pragma solidity ^0.8.14;
 
 import "./CircularManager.sol";
+import "./GameChannelManager.sol";
 
-abstract contract TourneyManager is CircularManager {
+abstract contract TourneyManager is CircularManager, GameChannelManager {
     struct Tourney {
         uint256 id;
         uint256 registerDeadline;
@@ -24,6 +25,10 @@ abstract contract TourneyManager is CircularManager {
     function startTouneyGame(Tourney storage tourney, uint256 challengerSeatId, uint256 defenderSeatId, string memory initialState) internal {
         uint256 gameId = getTourneyGameId(tourney.id, challengerSeatId, defenderSeatId);
         require(tourney.games[gameId].length == 0, "Game already started");
+
+        // TODO
+        Game storage game = tourney.games[gameId];
+
         tourney.games[gameId].push(initialState);
         emit StartTourneyGame(gameId, challengerSeatId, defenderSeatId);
     }
