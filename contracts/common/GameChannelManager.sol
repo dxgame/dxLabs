@@ -72,13 +72,13 @@ abstract contract GameChannelManager {
 
     function playGame(
         Game storage game,
-        uint256 player,
+        uint256 playerSeatId,
         uint256 moveIndex,
         string memory state
     ) internal {
         require(game.states.length > 0, "DxGame: game not started");
         require(!isGameFinished(game), "DxGame: game already finished");
-        require(_nextPlayer(game) == player, "DxGame: wrong player");
+        require(_nextPlayerSeatId(game) == playerSeatId, "DxGame: wrong player");
         require(game.states.length == moveIndex, "DxGame: wrong move index");
         require(block.number <= game.nextMoveDeadline, "DxGame: you are too late");
 
@@ -87,7 +87,7 @@ abstract contract GameChannelManager {
 
     function determineGameWinner(Game storage game) internal view returns (uint256) {
         if (isGameStoppedHalfway(game)) {
-            return _lastPlayer(game);
+            return _lastPlayerSeatId(game);
         }
         if (isGameFinished(game)) {
             return whoWinsTheGame(game);
@@ -105,13 +105,13 @@ abstract contract GameChannelManager {
         return game.states[game.states.length - 1];
     }
 
-    function _lastPlayer(
+    function _lastPlayerSeatId(
         Game storage game
     ) private view returns (uint256) {
         return game.states.length % 2 == 1 ? game.challenger : game.defender;
     }
 
-    function _nextPlayer(
+    function _nextPlayerSeatId(
         Game storage game
     ) private view returns (uint256) {
         return game.states.length % 2 == 0 ? game.challenger : game.defender;
@@ -126,8 +126,8 @@ abstract contract GameChannelManager {
 
         emit UpdateStateEvent(
             game.id,
-            _lastPlayer(game),
-            _nextPlayer(game),
+            _lastPlayerSeatId(game),
+            _nextPlayerSeatId(game),
             state,
             game.nextMoveDeadline
         );

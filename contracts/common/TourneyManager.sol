@@ -11,45 +11,61 @@ abstract contract TourneyManager is CircularManager, GameChannelManager {
 
         CircularList circular;
         mapping (uint256 => address) seats;
-        mapping (uint256 => Game[]) games;
+        mapping (uint256 => Game) games;
     }
 
     event StartTourneyGame(uint256 gameId, uint256 challengerSeatId, uint256 defenderSeatId);
 
-    function registerTourneySeat(Tourney storage tourney, address player) internal {
+    function registerTourneySeat(
+        Tourney storage tourney,
+        address player
+    ) internal {
         require(tourney.registerDeadline >= block.number, "Tourney registration is closed");
         uint256 id = addCircularNode(tourney.circular);
         tourney.seats[id] = player;
     }
 
-    function startTouneyGame(Tourney storage tourney, uint256 challengerSeatId, uint256 defenderSeatId, string memory initialState) internal {
+    function startTouneyGame(
+        Tourney storage tourney,
+        uint256 challengerSeatId,
+        uint256 defenderSeatId,
+        address player,
+        string memory initialState
+    ) internal {
+        require(tourney.seats[challengerSeatId] == player, "Only the challenger can start the game");
+    
         uint256 gameId = getTourneyGameId(tourney.id, challengerSeatId, defenderSeatId);
-        require(tourney.games[gameId].length == 0, "Game already started");
-
-        // TODO
-        Game storage game = tourney.games[gameId];
-
-        tourney.games[gameId].push(initialState);
+        require(tourney.games[gameId].states.length == 0, "Game already started");
+    
+        startGame(tourney.games[gameId], initialState, challengerSeatId, defenderSeatId);
         emit StartTourneyGame(gameId, challengerSeatId, defenderSeatId);
     }
 
-    function playTourneyGame(Tourney storage tourney, uint256 gameId, string memory state) internal {
-        tourney.games[gameId].push(state);
+    function playTourneyGame(
+        Tourney storage tourney,
+        uint256 gameId,
+        uint256 seatId,
+        uint256 moveIndex,
+        address player,
+        string memory state
+    ) internal {
+        require(tourney.seats[seatId] == player, "Only the player can play the game");
+        playGame(tourney.games[gameId], seatId, moveIndex, state);
     }
 
-    function removeTourneySeat(Tourney storage tourney, uint256 seatId) internal {
-        removeCircularNode(tourney.circular, seatId);
+    function removeGameLoserSeat(Tourney storage tourney, uint256 gameId) internal {
+        Game storage game = tourney.games[gameId];
+        uint256 winner = determineGameWinner(game);
+        if (winner == game.challenger) {
+            removeCircularNode(tourney.circular, game.defender);
+        }
+        if (winner == game.defender) {
+            removeCircularNode(tourney.circular, game.challenger);
+        }
     }
-
-    /* - */
 
     function countTourneySurvivors(Tourney storage tourney) internal view returns (uint count) {
         return countCircularList(tourney.circular);
-    }
-
-    function getTourneyGame(Tourney storage tourney, uint256 seatId1, uint256 seatId2) internal view returns (string[] storage) {
-        uint256 gameId = getTourneyGameId(tourney.id, seatId1, seatId2);
-        return tourney.games[gameId];
     }
 
     function getTourneyGameId(uint256 tourneyId, uint256 seatId1, uint256 seatId2) internal pure returns (uint256) {
