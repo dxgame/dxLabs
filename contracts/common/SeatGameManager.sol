@@ -45,6 +45,7 @@ abstract contract SeatGameManager {
         uint256 indexed id,
         uint256 indexed player,
         uint256 indexed nextPlayer,
+        string state,
         uint256 nextMoveDeadline
     );
 
@@ -78,33 +79,6 @@ abstract contract SeatGameManager {
         return isGameHalfway(game) && (block.number > game.nextMoveDeadline);
     }
 
-    function getGameOpponent(
-        Game storage game,
-        uint256 player
-    ) internal view returns (uint256) {
-        if (player == game.challenger) {
-            return game.defender;
-        }
-        if (player == game.defender) {
-            return game.challenger;
-        }
-        revert("Player is not a part of this game");
-    }
-
-    function getGameNextPlayer(
-        Game storage game
-    ) internal view returns (uint256) {
-        uint256 player = _lastPlayer(game);
-        return getGameOpponent(game, player);
-    }
-
-    function getGameNextMoveIndex(
-        Game storage game
-    ) internal view returns (uint256) {
-        require(isGamePlaying(game), "DxGame: move not allowed");
-        return game.states.length;
-    }
-
     function startGame(
         Game storage game,
         string memory state,
@@ -120,16 +94,20 @@ abstract contract SeatGameManager {
 
     function playGame(
         Game storage game,
+        uint256 player,
+        uint256 moveIndex,
         string memory state
     ) internal {
         require(game.states.length > 0, "DxGame: game not started");
-        require(block.number <= game.nextMoveDeadline, "DxGame: you are too late");
         require(!isGameFinished(game), "DxGame: game already finished");
+        require(_nextPlayer(game) == player, "DxGame: wrong player");
+        require(game.states.length == moveIndex, "DxGame: wrong move index");
+        require(block.number <= game.nextMoveDeadline, "DxGame: you are too late");
 
         _pushState(game, state);
     }
 
-    function getGameWinner(Game storage game) internal view returns (uint256) {
+    function determineGameWinner(Game storage game) internal view returns (uint256) {
         if (isGameStoppedHalfway(game)) {
             return _lastPlayer(game);
         }
@@ -172,6 +150,7 @@ abstract contract SeatGameManager {
             game.id,
             _lastPlayer(game),
             _nextPlayer(game),
+            state,
             game.nextMoveDeadline
         );
     }
