@@ -29,8 +29,8 @@ abstract contract TourneyManager is CircularManager, GameChannelManager {
         Tourney storage tourney,
         uint256 challengerSeatId,
         uint256 defenderSeatId,
-        address player,
-        string memory initialState
+        string memory initialState,
+        address player
     ) internal {
         require(tourney.seats[challengerSeatId] == player, "Only the challenger can start the game");
     
@@ -44,10 +44,10 @@ abstract contract TourneyManager is CircularManager, GameChannelManager {
     function playTourneyGame(
         Tourney storage tourney,
         uint256 gameId,
-        uint256 seatId,
         uint256 moveIndex,
-        address player,
-        string memory state
+        uint256 seatId,
+        string memory state,
+        address player
     ) internal {
         require(tourney.seats[seatId] == player, "Only the player can play the game");
         playGame(tourney.games[gameId], seatId, moveIndex, state);
