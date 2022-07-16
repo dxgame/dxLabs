@@ -19,8 +19,6 @@ pragma solidity ^0.8.14;
         You must set MAX_STATES to the number of steps in the game.
         or override isGameFinished() to customize the game-specific finished condition.
 
-    // TODO: GAME SCRIPTS - programmable game-specific function to help users make more games
-
     // TODO: use channel id & state no to identify the move
     // TODO: maybe StateChannelManager ?
  */
@@ -49,10 +47,6 @@ abstract contract SeatGameManager {
         uint256 indexed nextPlayer,
         uint256 nextMoveDeadline
     );
-    event WinningGameEvent(
-        uint256 indexed id,
-        uint256 indexed winner
-    );
 
     function isGameStarted(
         Game storage game
@@ -72,28 +66,16 @@ abstract contract SeatGameManager {
         return isGameStarted(game) && !isGameFinished(game);
     }
 
-    function isPlaying(
+    function isGamePlaying(
         Game storage game
     ) internal view returns(bool) {
         return isGameHalfway(game) && (block.number <= game.nextMoveDeadline);
     }
 
-    function isGameStopped(
+    function isGameStoppedHalfway(
         Game storage game
     ) internal view returns (bool) {
         return isGameHalfway(game) && (block.number > game.nextMoveDeadline);
-    }
-
-    function stoppedPlaying(
-        Game storage game
-    ) internal view returns(bool) {
-        return isGameStopped(game) || isGameFinished(game);
-    }
-
-    function notPlaying(
-        Game storage game
-    ) internal view returns(bool) {
-        return !isPlaying(game);
     }
 
     function getGameOpponent(
@@ -119,7 +101,7 @@ abstract contract SeatGameManager {
     function getGameNextMoveIndex(
         Game storage game
     ) internal view returns (uint256) {
-        require(isPlaying(game), "DxGame: move not allowed");
+        require(isGamePlaying(game), "DxGame: move not allowed");
         return game.states.length;
     }
 
@@ -148,11 +130,16 @@ abstract contract SeatGameManager {
     }
 
     function getGameWinner(Game storage game) internal view returns (uint256) {
-        if (!stoppedPlaying(game)) return 0;
-        return isGameStopped(game) ? _lastPlayer(game) : whoWins(game);
+        if (isGameStoppedHalfway(game)) {
+            return _lastPlayer(game);
+        }
+        if (isGameFinished(game)) {
+            return whoWinsTheGame(game);
+        }
+        revert("DxGame: game not finished");
     }
 
-    function whoWins(
+    function whoWinsTheGame(
         Game storage game
     ) internal view virtual returns (uint256);
 
