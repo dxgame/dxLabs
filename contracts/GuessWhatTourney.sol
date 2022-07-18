@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "./common/HalvingToken.sol";
 import "./common/TourneyManager.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract GuessBitToken is TourneyManager {
+contract GuessBitToken is TourneyManager, HalvingToken {
     uint256 upperBound;
     Tourney[] tourneys;
 
-    constructor() {
+    constructor() HalvingToken("GuessBit", "GBT", 1, 50, 1000) {
         upperBound = 1;
     }
 
