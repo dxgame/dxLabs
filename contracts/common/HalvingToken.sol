@@ -18,11 +18,21 @@ contract HalvingToken is ERC20 {
         initialAmount = _initialAmount;
     }
 
-    function mint(address player) internal {
+    function maxSupply() public view returns (uint256) {
+        return initialAmount * 2 * halvingPeriod;
+    }
+
+    function circulatingSupply() public view returns (uint256) {
+        return totalSupply();
+    }
+
+    function mint(address player, uint256 _mintCounter) internal {
+        require(_mintCounter > mintCounter, "Mint counter must increase");
+
         uint256 periods = mintCounter / halvingPeriod;
         uint256 amount = initialAmount / (2 ** periods);
         _mint(player, amount);
 
-        mintCounter ++;
+        mintCounter = _mintCounter;
     }
 }
