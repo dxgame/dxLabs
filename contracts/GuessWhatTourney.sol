@@ -9,7 +9,13 @@ contract GuessBitToken is TourneyManager, HalvingToken {
     uint256 upperBound;
     Tourney[] tourneys;
 
-    constructor() HalvingToken("GuessBit", "GBT", 1, 50, 1000) {
+    constructor() HalvingToken(
+        "GuessBit", // name
+        "GBT",      // symbol
+        210_000,    // halvingPeriod
+        50,         // initialAmount
+        1000        // blocksPerMint
+    ) {
         upperBound = 1;
     }
 
