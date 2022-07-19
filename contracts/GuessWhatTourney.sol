@@ -158,11 +158,14 @@ contract GuessBitToken is TourneyManager, HalvingToken {
         uint8 v, bytes32 r, bytes32 s
     ) private view {
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, address(this), inputHash));
+        bytes32 prefixedHash = keccak256(abi.encodePacked(
+            prefix,
+            keccak256(abi.encodePacked(address(this), inputHash))
+        ));
         require(ecrecover(prefixedHash, v, r, s) == signer, "DxGame: signature not right");
     }
 
-        function getDigits(uint256  n) private pure returns (uint256 ) {
+    function getDigits(uint256  n) private pure returns (uint256 ) {
         if (n <= 9) return 1;
         return getDigits(n / 10) + 1;
     }
