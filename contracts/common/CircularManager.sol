@@ -33,12 +33,9 @@ contract CircularManager {
 
     function removeCircularNode (CircularList storage list, uint256 id) internal {
         uint256 nodesCount = countCircularList(list);
-        if (nodesCount == 0) {
-            delete list.nodes[id];
-        } else if (nodesCount == 1) {
+        if (nodesCount == 1) {
             require(list.head == id, "Invalid circular list node to remove");
             list.head = 0;
-            delete list.nodes[id];
         } else if (nodesCount == 2) {
             require(list.head == id || list.nodes[list.head].next == id, "Invalid circular list node to remove");
             if (list.head == id) {
@@ -46,11 +43,10 @@ contract CircularManager {
             }
             list.nodes[list.head].prev = 0;
             list.nodes[list.head].next = 0;
-            delete list.nodes[id];
         } else {
             _connectCircularNodes(list, list.nodes[id].prev, list.nodes[id].next);
-            delete list.nodes[id];
         }
+        delete list.nodes[id];
     }
 
     function countCircularList(CircularList storage list) internal view returns (uint256) {
