@@ -32,14 +32,25 @@ contract CircularManager {
     }
 
     function removeCircularNode (CircularList storage list, uint256 id) internal {
-        CircularNode storage node = list.nodes[id];
-        if (list.head == id) {
-            list.head = node.next;
+        uint256 nodesCount = countCircularList(list);
+        if (nodesCount == 0) {
+            delete list.nodes[id];
+        } else if (nodesCount == 1) {
+            require(list.head == id, "Invalid circular list node to remove");
+            list.head = 0;
+            delete list.nodes[id];
+        } else if (nodesCount == 2) {
+            require(list.head == id || list.nodes[list.head].next == id, "Invalid circular list node to remove");
+            if (list.head == id) {
+                list.head = list.nodes[id].next;
+            }
+            list.nodes[list.head].prev = 0;
+            list.nodes[list.head].next = 0;
+            delete list.nodes[id];
+        } else {
+            _connectCircularNodes(list, list.nodes[id].prev, list.nodes[id].next);
+            delete list.nodes[id];
         }
-        if (node.next != 0) {
-            _connectCircularNodes(list, node.prev, node.next);
-        }
-        delete list.nodes[id];
     }
 
     function countCircularList(CircularList storage list) internal view returns (uint256) {
@@ -53,14 +64,22 @@ contract CircularManager {
     }
 
     function _addToCircularList (CircularList storage list, uint256 nodeId) private {
-        if (list.head == 0) {
-            list.nodes[nodeId].next = 0;
-            list.nodes[nodeId].prev = 0;
+        uint256 nodesCount = countCircularList(list);
+        if (nodesCount == 0) {
             list.head = nodeId;
-        } else {
-            _connectCircularNodes(list, nodeId, list.head);
-            _connectCircularNodes(list, list.nodes[list.head].prev, nodeId);
+            return;
         }
+
+        if (nodesCount == 1) {
+            list.nodes[nodeId].next = list.head;
+            list.nodes[nodeId].prev = list.head;
+            list.nodes[list.head].next = nodeId;
+            list.nodes[list.head].prev = nodeId;
+            return;
+        }
+        
+        _connectCircularNodes(list, nodeId, list.head);
+        _connectCircularNodes(list, list.nodes[list.head].prev, nodeId);
     }
 
     function _connectCircularNodes(CircularList storage list, uint256 prevId, uint256 nextId) private {

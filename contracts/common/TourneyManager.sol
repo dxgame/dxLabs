@@ -64,6 +64,11 @@ abstract contract TourneyManager is CircularManager, GameChannelManager {
         }
     }
 
+    function determineTourneyWinner(Tourney storage tourney) internal view returns (address) {
+        require(countTourneySurvivors(tourney) == 1, "Tourney has more than one winner");
+        return tourney.seats[tourney.circular.head];
+    }
+
     function countTourneySurvivors(Tourney storage tourney) internal view returns (uint count) {
         return countCircularList(tourney.circular);
     }

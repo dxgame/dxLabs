@@ -6,7 +6,9 @@ import "./common/TourneyManager.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract GuessBitToken is TourneyManager, HalvingToken {
-    uint256 upperBound;
+
+    uint256 public upperBound;
+    uint256 public blocksPerTourney;
     Tourney[] tourneys;
 
     constructor() HalvingToken(
@@ -17,6 +19,21 @@ contract GuessBitToken is TourneyManager, HalvingToken {
         1000        // blocksPerMint
     ) {
         upperBound = 1;
+        blocksPerTourney = 1000;
+    }
+
+    function tourneyRegisterDeadline(uint256 tourneyIndex) public view returns (uint256) {
+        return genesisBlock + blocksPerTourney * (tourneyIndex + 1);
+    }
+
+    function tourneyRewardBlock(uint256 tourneyIndex) public view returns (uint256) {
+        return tourneyRegisterDeadline(tourneyIndex) + blocksPerTourney;
+    }
+
+    function claimTourneyReward(uint256 tourneyIndex) public {
+        require(block.number >= tourneyRewardBlock(tourneyIndex), "Tourney reward is not yet available");
+        
+        mint(player, tourneyIndex + 1);
     }
 
     function challenge(
