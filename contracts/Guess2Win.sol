@@ -3,11 +3,8 @@ pragma solidity ^0.8.14;
 
 interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
 contract Guess2Win {
@@ -19,13 +16,14 @@ contract Guess2Win {
         uint256 amount;
     
         address owner;
-        bytes32 question;
+        uint256 question;
         uint256 startAt;
 
         address answerer;
         bool answer;
+        uint256 answerAt;
 
-        string revealMessage;
+        bool revealedAnswer;
 
         uint256 revealTime;
         uint256 freezeTime;
@@ -40,7 +38,6 @@ contract Guess2Win {
     event Add(
         uint256 indexed id,
         address indexed owner,
-        uint256 question,
         uint256 startAt,
         uint256 revealTime,
         uint256 freezeTime,
@@ -66,7 +63,7 @@ contract Guess2Win {
     function add (
         address token,
         uint256 amount,
-        bytes32 question,
+        uint256 question,
 
         uint256 revealTime,
         uint256 freezeTime,
@@ -79,22 +76,21 @@ contract Guess2Win {
 
         IERC20(token).transferFrom(msg.sender, address(this), amount);
 
-        Game storage game = Game({
-            token: token,
-            amount: amount,
-            owner: msg.sender,
-            question: question,
-            startAt: block.timestamp,
+        Game memory game;
 
-            revealTime: revealTime,
-            freezeTime: freezeTime,
-            expiryTime: expiryTime
-        });
+        game.token = token;
+        game.amount = amount;
+        game.owner = msg.sender;
+        game.question = question;
+        game.startAt = block.timestamp;
+
+        game.revealTime = revealTime;
+        game.freezeTime = freezeTime;
+        game.expiryTime = expiryTime;
 
         games.push(game);
-        Add(games.length - 1,
+        emit Add(games.length - 1,
             game.owner,
-            game.question,
             game.startAt,
             game.revealTime,
             game.freezeTime,
@@ -108,32 +104,56 @@ contract Guess2Win {
         require(msg.sender == game.owner, "Only the owner can delist the game");
         require(game.answerer == address(0), "Cannot delist an answered game");
         require(block.timestamp > game.startAt + game.freezeTime, "Cannot delist freezed game");
+        require(game.delisted == false, "Game already delisted");
+
+        game.delisted = true;
+        IERC20(token).transfer(msg.sender, amount);
     }
 
     function renew (uint256 id) external {
         Game storage game = games[id];
         require(msg.sender == game.owner, "Only the owner can renew the game");
         require(game.answerer == address(0), "Cannot renew an answered game");
+        require(game.delisted == false, "Cannot renew an delisted game");
+
         game.startAt = block.timestamp;
     }
 
     function reply (uint256 id, bool answer) external {
         Game storage game = games[id];
-        require(id < games.length, "Game does not exist"); // TODO: test if this is needed
+
+        // TODO: test if this is needed
+        require(id < games.length, "Game does not exist");
+
         require(game.answerer == address(0), "Cannot reply an answered game");
-        require(block.timestamp > game.startAt + game.expiryTime, "Game expired");
+        require(block.timestamp <= game.startAt + game.expiryTime, "Game expired");
+        require(game.delisted == false, "Cannot reply an delisted game");
+
         game.answerer = msg.sender;
         game.answer = answer;
+        game.answerAt = block.timestamp;
     }
 
-    function reveal (uint256 id, string calldata revealMessage) external {
+    function reveal (uint256 id, bool revealedAnswer, string calldata mask) external {
         Game storage game = games[id];
         require(msg.sender == game.owner, "Only the owner can reveal the game");
-        require(game.answerer != address(0), "Cannot reply an answered game");
-        game.revealMessage = revealMessage;
+        require(game.answerer != address(0), "Cannot reveal not answered game");
+        require(block.timestamp <= game.answerAt + game.revealTime, "It's too late");
+        require(question == uint256(keccak256(abi.encodePacked(revealedAnswer, mask))), "You must provide the original");
+
+        game.revealedAnswer = revealedAnswer;
+
+        if (game.revealedAnswer != game.answer) {
+            claim();
+        }
     }
 
-    function claim () {
+    function claim () public {
+        game.claimed == true;
+    }
 
+    function getWinner (uint256 id) view returns (address) {
+        Game storage game = games[id];
+        if (block.timestamp > game.startAt + )
     }
 }
