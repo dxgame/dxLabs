@@ -8,8 +8,8 @@ interface IERC20 {
 }
 
 contract Guess2Win {
-    uint256 constant public max_reveal_time = 1 days;
-    uint256 constant public min_freeze_time = 1 hours;
+    uint256 constant public MAX_REVEAL_TIME = 1 days;
+    uint256 constant public MIN_FREEZE_TIME = 1 hours;
 
     struct Game {
         address token;
@@ -74,9 +74,9 @@ contract Guess2Win {
         uint256 expiryTime
     ) public returns (uint256 id) {
         require(amount > 0, "You need to put at least some tokens");
-        require(revealTime <= max_reveal_time, "Reveal time must be at most 1 day");
-        require(freezeTime >= min_freeze_time, "Freeze time must be at least 1 hour");
-        require(expiryTime >= min_freeze_time, "Expiry time must be at least 1 hour");
+        require(revealTime <= MAX_REVEAL_TIME, "Reveal time must be at most 1 day");
+        require(freezeTime >= MIN_FREEZE_TIME, "Freeze time must be at least 1 hour");
+        require(expiryTime >= MIN_FREEZE_TIME, "Expiry time must be at least 1 hour");
 
         IERC20(token).transferFrom(msg.sender, address(this), amount);
 
