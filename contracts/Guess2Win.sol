@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
+interface IERC20 {
+    function balanceOf(address account) external view returns (uint256);
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
+}
+
 contract Guess2Win {
     uint256 constant public max_reveal_time = 1 days;
     uint256 constant public min_freeze_time = 1 hours;
@@ -68,9 +77,9 @@ contract Guess2Win {
         require(freezeTime >= min_freeze_time, "Freeze time must be at least 1 hour");
         require(expiryTime >= min_freeze_time, "Expiry time must be at least 1 hour");
 
-        token.transferFrom(msg.sender, address(this), amount);
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
 
-        Game game = Game({
+        Game storage game = Game({
             token: token,
             amount: amount,
             owner: msg.sender,
@@ -125,6 +134,6 @@ contract Guess2Win {
     }
 
     function claim () {
-        
+
     }
 }
