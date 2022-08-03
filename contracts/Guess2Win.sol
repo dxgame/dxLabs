@@ -14,7 +14,7 @@ contract Guess2Win {
         uint256 startAt;
 
         address answerer;
-        uint256 answer;
+        bool answer;
 
         string revealMessage;
 
@@ -95,22 +95,36 @@ contract Guess2Win {
     }
 
     function delist(uint256 id) external {
-        require(msg.sender == games[id].owner, "Only the owner can delist the game");
+        Game storage game = games[id];
+        require(msg.sender == game.owner, "Only the owner can delist the game");
+        require(game.answerer == address(0), "Cannot delist an answered game");
+        require(block.timestamp > game.startAt + game.freezeTime, "Cannot delist freezed game");
     }
 
-    function renew (uint256 id) {
-
+    function renew (uint256 id) external {
+        Game storage game = games[id];
+        require(msg.sender == game.owner, "Only the owner can renew the game");
+        require(game.answerer == address(0), "Cannot renew an answered game");
+        game.startAt = block.timestamp;
     }
 
-    function reply (uint256 id) {
-        transfer();
+    function reply (uint256 id, bool answer) external {
+        Game storage game = games[id];
+        require(id < games.length, "Game does not exist"); // TODO: test if this is needed
+        require(game.answerer == address(0), "Cannot reply an answered game");
+        require(block.timestamp > game.startAt + game.expiryTime, "Game expired");
+        game.answerer = msg.sender;
+        game.answer = answer;
     }
 
-    function reveal () {
-
+    function reveal (uint256 id, string calldata revealMessage) external {
+        Game storage game = games[id];
+        require(msg.sender == game.owner, "Only the owner can reveal the game");
+        require(game.answerer != address(0), "Cannot reply an answered game");
+        game.revealMessage = revealMessage;
     }
 
     function claim () {
-
+        
     }
 }
