@@ -23,6 +23,7 @@ contract Guess2Win {
         bool answer;
         uint256 answerAt;
 
+        bool revealed;
         bool revealedAnswer;
 
         uint256 revealTime;
@@ -33,7 +34,7 @@ contract Guess2Win {
         bool claimed;
     }
 
-    Game[] games;
+    Game[] public games;
 
     event Add(
         uint256 indexed id,
@@ -47,17 +48,20 @@ contract Guess2Win {
     event Reply(
         uint256 indexed id,
         address indexed answerer,
-        uint256 answer
+        bool answer
     );
 
     event Reveal(
         uint256 indexed id,
-        uint256 revealMessage
+        bool revealedAnswer,
+        string mask
     );
 
     event Claim(
         uint256 indexed id,
-        address indexed winner
+        address indexed winner,
+        address indexed token,
+        uint256 award
     );
 
     function add (
@@ -104,10 +108,11 @@ contract Guess2Win {
         require(msg.sender == game.owner, "Only the owner can delist the game");
         require(game.answerer == address(0), "Cannot delist an answered game");
         require(block.timestamp > game.startAt + game.freezeTime, "Cannot delist freezed game");
-        require(game.delisted == false, "Game already delisted");
 
+        require(game.delisted == false, "Game already delisted");
         game.delisted = true;
-        IERC20(token).transfer(msg.sender, amount);
+
+        IERC20(game.token).transfer(msg.sender, game.amount);
     }
 
     function renew (uint256 id) external {
@@ -121,17 +126,18 @@ contract Guess2Win {
 
     function reply (uint256 id, bool answer) external {
         Game storage game = games[id];
-
         // TODO: test if this is needed
         require(id < games.length, "Game does not exist");
 
-        require(game.answerer == address(0), "Cannot reply an answered game");
         require(block.timestamp <= game.startAt + game.expiryTime, "Game expired");
         require(game.delisted == false, "Cannot reply an delisted game");
-
+        require(game.answerer == address(0), "Cannot reply an answered game");
         game.answerer = msg.sender;
         game.answer = answer;
         game.answerAt = block.timestamp;
+        emit Reply(id, msg.sender, game.answer);
+
+        IERC20(game.token).transferFrom(msg.sender, address(this), game.amount);
     }
 
     function reveal (uint256 id, bool revealedAnswer, string calldata mask) external {
@@ -139,21 +145,36 @@ contract Guess2Win {
         require(msg.sender == game.owner, "Only the owner can reveal the game");
         require(game.answerer != address(0), "Cannot reveal not answered game");
         require(block.timestamp <= game.answerAt + game.revealTime, "It's too late");
-        require(question == uint256(keccak256(abi.encodePacked(revealedAnswer, mask))), "You must provide the original");
-
+        require(game.question == uint256(keccak256(abi.encodePacked(revealedAnswer, mask))), "Incorrect input");
+        require(game.revealed == false, "Game already revealed");
+        game.revealed = true;
         game.revealedAnswer = revealedAnswer;
 
-        if (game.revealedAnswer != game.answer) {
-            claim();
-        }
+        emit Reveal(id, revealedAnswer, mask);
+
+        claim(id);
     }
 
-    function claim () public {
-        game.claimed == true;
-    }
-
-    function getWinner (uint256 id) view returns (address) {
+    function claim (uint256 id) public {
         Game storage game = games[id];
-        if (block.timestamp > game.startAt + )
+        require(game.claimed == false, "Game already claimed");
+        game.claimed == true;
+        address winner = getWinner(id);
+
+        require(winner != address(0), "No winner");
+        emit Claim(id, winner, game.token, game.amount * 2);
+
+        IERC20(game.token).transfer(winner, game.amount * 2);
+    }
+
+    function getWinner (uint256 id) public view returns (address) {
+        Game storage game = games[id];
+        address winner;
+        if (game.revealed) {
+            winner = game.revealedAnswer == game.answer ? game.answerer : game.owner;
+        } else if (block.timestamp > game.answerAt + game.revealTime) {
+            winner = game.answerer;
+        }
+        return winner;
     }
 }
